@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moments Master - Physics Game</title>
+    <title>Moments Drill - Physics Game</title>
     <style>
         /* CSS Variables for consistent theming */
         :root {
@@ -551,7 +551,8 @@
         <!-- Introduction Screen -->
         <div id="introScreen" class="screen active">
             <div class="intro-content">
-                <h1>⚡ MOMENTS MASTER ⚡</h1>
+                <h1>⚡ MOMENTS DRILL ⚡</h1>
+                <h3>Physics With Keith</h3>
                 <div class="rules">
                     <h3>🎯 How to Play</h3>
                     <ul>
@@ -629,7 +630,7 @@
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-value" id="questionsAnswered">0</div>
-                        <div class="stat-label">Questions Answered</div>
+                        <div class="stat-label">Questions Seen</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value" id="correctAnswers">0</div>
@@ -720,7 +721,7 @@
             attemptsRemaining: 3,
             accuracyScore: 0, // -100 to +100, starts at 0
             previousAnswers: [], // Store previous wrong answers for hint generation
-            preferredForceCount: 5 // Start with max forces, can be reduced by skipping
+            preferredForceCount: 2 // Start with 2 forces, increases with correct answers up to 5
         };
 
         // ==================== BACKGROUND ANIMATION ====================
@@ -760,7 +761,7 @@
             gameState.firstTimeCorrect = 0;
             gameState.timeRemaining = 300;
             gameState.accuracyScore = 0;
-            gameState.preferredForceCount = 5; // Reset to max forces
+            gameState.preferredForceCount = 2; // Start with 2 forces
             
             showScreen('gameScreen');
             startTimer();
@@ -866,12 +867,16 @@
             // Generate beam angle (GCSE = 0, A-Level = -20 to +20 degrees)
             const beamAngle = isGCSE ? 0 : (Math.random() * 40 - 20);
             
-            // Number of forces (2-5, based on user preference from skipping)
-            const numForces = Math.min(gameState.preferredForceCount, Math.floor(Math.random() * 2) + Math.max(2, gameState.preferredForceCount - 1));
+            // Number of forces (use preferredForceCount directly)
+            const numForces = gameState.preferredForceCount;
             
-            // Generate forces with better spacing
+            // Generate forces with better spacing using zones
             const forces = [];
-            const usedPositions = [];
+            
+            // Create zones to prevent overlap
+            const totalRange = 1.5; // 0.5 to 2.0 meters
+            const minDistance = 0.5;
+            const zoneWidth = totalRange / numForces;
             
             for (let i = 0; i < numForces; i++) {
                 // For GCSE: forces can point up or down, but perpendicular to beam
@@ -881,21 +886,18 @@
                     // Perpendicular forces - can point up or down
                     angleFromVertical = Math.random() < 0.5 ? 0 : 180; // 0 = up, 180 = down
                 } else {
-                    // A-Level: -45 to +135 degrees (allowing upward and downward forces)
-                    angleFromVertical = Math.random() * 180 - 45;
+                    // A-Level: constrain to ±20 degrees from vertical (either up or down)
+                    const nearVertical = Math.random() * 40 - 20; // -20 to +20 degrees
+                    angleFromVertical = Math.random() < 0.5 ? nearVertical : (180 + nearVertical); // up or down
                 }
                 
-                // Generate a distance that doesn't overlap with existing forces
-                let distance, attempts = 0;
-                do {
-                    distance = Math.random() * 1.5 + 0.5; // 0.5-2 m from pivot
-                    attempts++;
-                } while (attempts < 20 && usedPositions.some(pos => Math.abs(pos - distance) < 0.3));
-                
-                usedPositions.push(distance);
+                // Position within the zone to prevent overlap
+                const zoneCenter = minDistance + i * zoneWidth + zoneWidth / 2;
+                const maxVariation = (zoneWidth / 2) * 0.7; // 70% of half-zone to ensure gaps
+                const distance = zoneCenter + (Math.random() * 2 - 1) * maxVariation;
                 
                 const force = {
-                    magnitude: Math.random() * 100 + 100, // 100-200 N
+                    magnitude: Math.random() * 50 + 100, // 100-150 N
                     distance: distance,
                     angleFromVertical: angleFromVertical,
                     side: i % 2 === 0 ? 'left' : 'right' // Alternate sides for better distribution
@@ -1180,10 +1182,15 @@
                 // Draw angle (if A-Level or if this is the missing angle)
                 if (gameState.difficulty === 'alevel' || (isMissing && q.questionType === 'angle')) {
                     const displayMethod = q.angleDisplayMethod[idx] || 'beam';
-                    const angleValue = isMissing && q.questionType === 'angle' ? '?' : 
-                        Math.abs(90 - q.beamAngle - force.angleFromVertical).toFixed(1) + '°';
+                    let angleValue;
+                    if (isMissing && q.questionType === 'angle') {
+                        angleValue = '?';
+                    } else {
+                        // For A-Level, show angle from vertical (more meaningful for moments)
+                        angleValue = Math.abs(force.angleFromVertical).toFixed(1) + '°';
+                    }
                     
-                    drawAngleArc(ctx, forceX, forceY, beamAngleRad, forceAngleRad, 
+                    drawAngleArc(ctx, forceX, forceY, beamAngleRad, force.angleFromVertical, 
                         angleValue, forceColor, displayMethod);
                 }
             });
@@ -1272,19 +1279,70 @@
             ctx.restore();
         }
 
-        function drawAngleArc(ctx, x, y, beamAngle, forceAngle, label, color, displayMethod) {
+        function drawAngleArc(ctx, x, y, beamAngle, forceAngleFromVertical, label, color, displayMethod) {
+            /*
+            ========================================================================
+            ANGLE ARC DRAWING - READ THIS TO FIX THE ANGLE ARCS
+            ========================================================================
+            
+            INPUTS:
+            - beamAngle: angle of the beam in CANVAS coordinates (radians)
+                * 0 = horizontal right
+                * -π/2 ≈ -1.57 = pointing up
+                * π = horizontal left
+            
+            - forceAngleFromVertical: angle of force from vertical in PHYSICS (degrees)
+                * 0° = force points straight up
+                * 90° = force points horizontal right
+                * 180° = force points straight down
+                * Positive = clockwise from vertical
+            
+            - label: the text to show (e.g., "15.6°")
+            
+            - displayMethod: 'beam' or 'normal'
+                * 'beam' = show arc from beam to force
+                * 'normal' = show arc from perpendicular-to-beam to force
+            
+            ========================================================================
+            FORCE ARROW DIRECTION IN CANVAS:
+            ========================================================================
+            The force arrow is drawn with this rotation: -forceAngleFromVertical*π/180
+            Starting from pointing UP (negative Y direction)
+            
+            So in canvas radians, the force points in direction:
+            */
+            
             ctx.save();
             ctx.translate(x, y);
             
             const arcRadius = 30;
             
+            // Convert force angle from physics degrees to canvas radians
+            const forceAngleRad = forceAngleFromVertical * Math.PI / 180;
+            
+            // CRITICAL: Where does the force arrow actually point in canvas coordinates?
+            // The arrow drawing code does: rotate(-forceAngleRad), then draw upward
+            // Upward in canvas = -π/2
+            // After rotation: -π/2 + (-forceAngleRad) = -π/2 - forceAngleRad
+            const forceDirectionInCanvas = -Math.PI/2 - forceAngleRad;
+            
+            // DEBUG: Uncomment to see the angles
+            // console.log('Force angle from vertical:', forceAngleFromVertical, '°');
+            // console.log('Force direction in canvas:', forceDirectionInCanvas, 'rad =', forceDirectionInCanvas * 180/Math.PI, '°');
+            // console.log('Beam angle in canvas:', beamAngle, 'rad =', beamAngle * 180/Math.PI, '°');
+            
             if (displayMethod === 'normal') {
-                // CASE 1: Show angle from NORMAL to FORCE
-                // Draw normal line (perpendicular to beam)
-                // Determine which side based on force direction
-                const forcePointsUp = Math.cos(forceAngle) > 0;
-                const normalAngle = beamAngle + (forcePointsUp ? -Math.PI / 2 : Math.PI / 2);
+                // ====================================================================
+                // CASE 1: Show arc from NORMAL (perpendicular to beam) to FORCE
+                // ====================================================================
                 
+                // The normal is perpendicular to the beam
+                // If beam is at angle θ, normal is at θ ± π/2
+                // Choose which side based on where the force is
+                const forcePointsGenerallyUp = (forceDirectionInCanvas % (2*Math.PI)) < 0 || (forceDirectionInCanvas % (2*Math.PI)) > Math.PI;
+                const normalAngle = beamAngle + (forcePointsGenerallyUp ? -Math.PI / 2 : Math.PI / 2);
+                
+                // Draw dashed normal line
                 ctx.strokeStyle = color;
                 ctx.setLineDash([5, 5]);
                 ctx.lineWidth = 2;
@@ -1294,63 +1352,91 @@
                 ctx.stroke();
                 ctx.setLineDash([]);
                 
-                // Draw arc from NORMAL to FORCE
-                const forceDir = -forceAngle - Math.PI / 2;
-                
-                // Always draw the smaller arc
-                let angleDiff = forceDir - normalAngle;
+                // Calculate angle from normal to force
+                let angleDiff = forceDirectionInCanvas - normalAngle;
                 // Normalize to -π to π
                 while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
                 while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
                 
-                const drawCounterClockwise = angleDiff < 0;
+                // Arc direction: counterclockwise if angleDiff is negative
+                const counterclockwise = angleDiff < 0;
                 
+                // Draw arc from normal to force
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 3;
                 ctx.beginPath();
-                ctx.arc(0, 0, arcRadius, normalAngle, forceDir, drawCounterClockwise);
+                ctx.arc(0, 0, arcRadius, normalAngle, forceDirectionInCanvas, counterclockwise);
                 ctx.stroke();
                 
-                // Label at midpoint of arc
+                // Label at midpoint
                 const midAngle = normalAngle + angleDiff / 2;
+                const labelDist = arcRadius + 18;
                 ctx.fillStyle = color;
                 ctx.font = 'bold 16px Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                
-                const labelDist = arcRadius + 18;
                 ctx.fillText(label, labelDist * Math.cos(midAngle), labelDist * Math.sin(midAngle));
                 
             } else {
-                // CASE 2: Show angle from BEAM to FORCE (no normal needed)
-                const forceDir = -forceAngle - Math.PI / 2;
+                // ====================================================================
+                // CASE 2: Show arc from BEAM to FORCE
+                // ====================================================================
                 
-                // Always draw the smaller arc
-                let angleDiff = forceDir - beamAngle;
+                // Calculate angle from beam to force
+                let angleDiff = forceDirectionInCanvas - beamAngle;
                 // Normalize to -π to π
                 while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
                 while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
                 
-                const drawCounterClockwise = angleDiff < 0;
+                // Arc direction: counterclockwise if angleDiff is negative
+                const counterclockwise = angleDiff < 0;
                 
+                // Draw arc from beam to force
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 3;
                 ctx.beginPath();
-                ctx.arc(0, 0, arcRadius, beamAngle, forceDir, drawCounterClockwise);
+                ctx.arc(0, 0, arcRadius, beamAngle, forceDirectionInCanvas, counterclockwise);
                 ctx.stroke();
                 
-                // Label at midpoint of arc
+                // Label at midpoint
                 const midAngle = beamAngle + angleDiff / 2;
+                const labelDist = arcRadius + 18;
                 ctx.fillStyle = color;
                 ctx.font = 'bold 16px Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                
-                const labelDist = arcRadius + 18;
                 ctx.fillText(label, labelDist * Math.cos(midAngle), labelDist * Math.sin(midAngle));
             }
             
             ctx.restore();
+            
+            /*
+            ========================================================================
+            TO FIX THE ARCS:
+            ========================================================================
+            
+            The issue is probably that the LABEL shows one angle but the ARC shows
+            a different angle. 
+            
+            For example:
+            - label might say "15.6°" (angle from vertical)
+            - but arc shows angle from BEAM to force (which could be different if beam is tilted)
+            
+            TO FIX: You need to make sure the arc matches what the label says.
+            
+            If label shows angle from vertical:
+            - Start arc at: -Math.PI/2 (vertical up)
+            - End arc at: forceDirectionInCanvas
+            
+            If label shows angle from beam:
+            - Start arc at: beamAngle
+            - End arc at: forceDirectionInCanvas
+            
+            If label shows angle from normal:
+            - Start arc at: normalAngle
+            - End arc at: forceDirectionInCanvas
+            ========================================================================
+            */
         }
 
         // ==================== ANSWER CHECKING ====================
@@ -1509,6 +1595,10 @@
             if (isFirstAttempt) {
                 gameState.firstTimeCorrect++;
                 gameState.accuracyScore = Math.min(100, gameState.accuracyScore + 10);
+                // Increase difficulty: add one more force (up to max 5)
+                if (gameState.preferredForceCount < 5) {
+                    gameState.preferredForceCount++;
+                }
             } else {
                 gameState.accuracyScore = Math.max(-100, gameState.accuracyScore - 5);
             }
