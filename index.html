@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moments Drill - Physics Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS Variables for consistent theming */
         :root {
             --primary: #FF6B35;
             --secondary: #004E89;
@@ -13,529 +13,130 @@
             --success: #2EC4B6;
             --danger: #E71D36;
             --bg-light: #FFF8F0;
-            --bg-dark: #1A1A2E;
             --text-dark: #16213E;
-            --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --shadow: 0 8px 32px rgba(0,0,0,0.1);
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Nunito', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             color: var(--text-dark);
             overflow-x: hidden;
+            padding: 20px 0;
         }
 
-        /* Animated background particles */
-        .bg-animation {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            z-index: 0;
-            overflow: hidden;
-            pointer-events: none;
-        }
+        .bg-animation { position: fixed; width: 100%; height: 100%; top:0; left:0; z-index:0; overflow:hidden; pointer-events:none; }
+        .particle { position: absolute; background: rgba(255,255,255,0.1); border-radius: 50%; animation: float 20s infinite; }
+        @keyframes float { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-100px) rotate(180deg); } }
 
-        .particle {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            animation: float 20s infinite;
-        }
+        .container { position:relative; z-index:1; max-width: 1100px; width: 97%; margin: 0 auto; }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-100px) rotate(180deg); }
-        }
+        .screen { display: none; background: var(--bg-light); border-radius: 24px; padding: 36px; box-shadow: var(--shadow); animation: slideIn 0.5s ease-out; }
+        .screen.active { display: block; }
+        @keyframes slideIn { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
 
-        /* Main container */
-        .container {
-            position: relative;
-            z-index: 1;
-            max-width: 1200px;
-            width: 95%;
-            margin: 20px auto;
-        }
+        h1 { font-size: clamp(1.8rem,5vw,3rem); color: var(--primary); text-align:center; margin-bottom:16px; font-weight:900; letter-spacing:-1px; }
+        h2 { font-size:1.6rem; color:var(--secondary); margin-bottom:16px; font-weight:800; }
 
-        /* Screen styles */
-        .screen {
-            display: none;
-            background: var(--bg-light);
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: var(--shadow);
-            animation: slideIn 0.5s ease-out;
-        }
+        .btn { background:var(--primary); color:white; border:none; padding:14px 28px; font-size:1.1rem; border-radius:12px; cursor:pointer; transition:all 0.3s; font-weight:800; box-shadow:0 4px 15px rgba(255,107,53,0.4); text-transform:uppercase; letter-spacing:1px; font-family:'Nunito',sans-serif; }
+        .btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(255,107,53,0.6); }
+        .btn:active { transform:translateY(0); }
+        .btn.secondary { background:var(--secondary); box-shadow:0 4px 15px rgba(0,78,137,0.4); }
+        .btn.secondary:hover { box-shadow:0 6px 20px rgba(0,78,137,0.6); }
+        .btn.small { padding:9px 18px; font-size:0.9rem; }
 
-        .screen.active {
-            display: block;
-        }
+        /* Intro screen */
+        .intro-content { text-align:center; }
+        .rules { background:white; padding:28px; border-radius:16px; margin:24px 0; text-align:left; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
+        .rules h3 { color:var(--secondary); margin-bottom:12px; font-size:1.2rem; font-weight:800; }
+        .rules ul { margin-left:22px; line-height:1.9; }
+        .rules li { margin-bottom:8px; }
+        .difficulty-selector { display:flex; gap:18px; justify-content:center; margin-top:24px; flex-wrap:wrap; }
+        .difficulty-btn { flex:1; min-width:200px; max-width:280px; padding:28px; background:white; border:4px solid var(--primary); border-radius:16px; cursor:pointer; transition:all 0.3s; }
+        .difficulty-btn:hover { transform:scale(1.05); border-color:var(--secondary); box-shadow:0 8px 24px rgba(0,0,0,0.15); }
+        .difficulty-btn h3 { color:var(--primary); font-size:1.6rem; margin-bottom:8px; font-weight:800; }
+        .difficulty-btn p { color:var(--text-dark); font-size:0.9rem; }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+        /* Game header */
+        .game-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px; }
+        .timer-section { display:flex; align-items:center; gap:12px; }
+        .timer { font-family:'JetBrains Mono',monospace; font-size:1.8rem; font-weight:700; color:var(--secondary); background:white; padding:8px 18px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.1); min-width:100px; text-align:center; }
+        .timer.warning { color:var(--danger); animation:pulse 1s infinite; }
+        @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.05); } }
+        .score-display { font-size:1.6rem; font-weight:800; color:var(--accent); background:white; padding:8px 18px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
 
-        /* Header styles */
-        h1 {
-            font-size: clamp(2rem, 5vw, 3.5rem);
-            color: var(--primary);
-            text-align: center;
-            margin-bottom: 20px;
-            text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
-            font-weight: 800;
-            letter-spacing: -1px;
-        }
+        /* Diagram layout: table left, canvas right */
+        .canvas-container { background:white; border-radius:16px; padding:16px; margin:16px 0; box-shadow:0 4px 16px rgba(0,0,0,0.1); overflow-x:auto; }
+        .diagram-layout { display:flex; flex-direction:row; gap:14px; align-items:flex-start; }
 
-        h2 {
-            font-size: clamp(1.5rem, 3vw, 2rem);
-            color: var(--secondary);
-            margin-bottom: 20px;
-            font-weight: 700;
+        /* Force table */
+        .force-table-container { flex-shrink:0; width:268px; }
+        .force-table { width:100%; border-collapse:collapse; font-size:0.88rem; border-radius:10px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+        .force-table th { background:var(--secondary); color:white; padding:9px 8px; text-align:center; font-weight:800; font-size:0.82rem; }
+        .force-table td { padding:9px 8px; text-align:center; border-bottom:1px solid #e8edf5; transition:background 0.15s; }
+        .force-table tr:last-child td { border-bottom:none; }
+        .force-table tbody tr:hover, .force-table tbody tr.highlighted {
+            background: rgba(255,107,53,0.13) !important;
         }
+        .force-label-cell { display:flex; align-items:center; justify-content:center; gap:6px; font-weight:800; font-size:1rem; }
+        .force-color-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+        .force-table .missing-val { color:var(--primary); font-weight:900; font-family:'JetBrains Mono',monospace; font-size:1.1rem; }
+        .force-table .known-val { font-family:'JetBrains Mono',monospace; color:var(--text-dark); }
 
-        /* Button styles */
-        .btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 16px 32px;
-            font-size: 1.2rem;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 700;
-            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.6);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn.secondary {
-            background: var(--secondary);
-            box-shadow: 0 4px 15px rgba(0, 78, 137, 0.4);
-        }
-
-        .btn.secondary:hover {
-            box-shadow: 0 6px 20px rgba(0, 78, 137, 0.6);
-        }
-
-        .btn.small {
-            padding: 10px 20px;
-            font-size: 1rem;
-        }
-
-        /* Introduction screen */
-        .intro-content {
-            text-align: center;
-        }
-
-        .rules {
-            background: white;
-            padding: 30px;
-            border-radius: 16px;
-            margin: 30px 0;
-            text-align: left;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .rules h3 {
-            color: var(--secondary);
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-        }
-
-        .rules ul {
-            margin-left: 25px;
-            line-height: 1.8;
-        }
-
-        .rules li {
-            margin-bottom: 10px;
-            color: var(--text-dark);
-        }
-
-        .difficulty-selector {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 30px;
-            flex-wrap: wrap;
-        }
-
-        .difficulty-btn {
-            flex: 1;
-            min-width: 200px;
-            max-width: 300px;
-            padding: 30px;
-            background: white;
-            border: 4px solid var(--primary);
-            border-radius: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .difficulty-btn:hover {
-            transform: scale(1.05);
-            border-color: var(--secondary);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-        }
-
-        .difficulty-btn h3 {
-            color: var(--primary);
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-        }
-
-        .difficulty-btn p {
-            color: var(--text-dark);
-            font-size: 0.95rem;
-        }
-
-        /* Game screen */
-        .game-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .timer-section {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .timer {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--secondary);
-            background: white;
-            padding: 10px 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            min-width: 120px;
-            text-align: center;
-        }
-
-        .timer.warning {
-            color: var(--danger);
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        .score-display {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--accent);
-            background: white;
-            padding: 10px 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Canvas container */
-        .canvas-container {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            margin: 20px 0;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-            overflow: auto;
-        }
-
-        #gameCanvas {
-            display: block;
-            margin: 0 auto;
-            max-width: 100%;
-            height: auto;
-        }
+        /* Canvas */
+        #gameCanvas { display:block; flex:1; min-width:0; cursor:crosshair; }
 
         /* Question section */
-        .question-section {
-            background: white;
-            border-radius: 16px;
-            padding: 25px;
-            margin: 20px 0;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-        }
-
-        .question-text {
-            font-size: 1.3rem;
-            color: var(--secondary);
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-
-        .input-section {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .answer-input {
-            flex: 1;
-            min-width: 150px;
-            padding: 15px;
-            font-size: 1.2rem;
-            border: 3px solid var(--secondary);
-            border-radius: 12px;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .answer-input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.2);
-        }
-
-        .unit-select {
-            padding: 15px;
-            font-size: 1.2rem;
-            border: 3px solid var(--secondary);
-            border-radius: 12px;
-            outline: none;
-            cursor: pointer;
-            background: white;
-            min-width: 120px;
-        }
-
-        .attempts {
-            font-size: 1.1rem;
-            color: var(--text-dark);
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-
-        .attempts.low {
-            color: var(--danger);
-        }
-
-        .feedback {
-            padding: 15px;
-            border-radius: 12px;
-            margin-top: 15px;
-            font-weight: 600;
-            animation: slideIn 0.3s ease;
-        }
-
-        .feedback.correct {
-            background: rgba(46, 196, 182, 0.2);
-            color: var(--success);
-            border-left: 4px solid var(--success);
-        }
-
-        .feedback.incorrect {
-            background: rgba(231, 29, 54, 0.2);
-            color: var(--danger);
-            border-left: 4px solid var(--danger);
-        }
+        .question-section { background:white; border-radius:16px; padding:22px; margin:14px 0; box-shadow:0 4px 16px rgba(0,0,0,0.1); }
+        .question-text { font-size:1.2rem; color:var(--secondary); margin-bottom:16px; font-weight:800; }
+        .input-section { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
+        .answer-input { flex:1; min-width:130px; padding:13px; font-size:1.1rem; border:3px solid var(--secondary); border-radius:12px; outline:none; transition:all 0.3s; font-family:'JetBrains Mono',monospace; }
+        .answer-input:focus { border-color:var(--primary); box-shadow:0 0 0 4px rgba(255,107,53,0.2); }
+        .unit-select { padding:13px; font-size:1.1rem; border:3px solid var(--secondary); border-radius:12px; outline:none; cursor:pointer; background:white; min-width:120px; font-family:'Nunito',sans-serif; }
+        .attempts { font-size:1rem; color:var(--text-dark); margin-bottom:12px; font-weight:700; }
+        .attempts.low { color:var(--danger); }
+        .feedback { padding:13px; border-radius:12px; margin-top:12px; font-weight:700; animation:slideIn 0.3s ease; }
+        .feedback.correct { background:rgba(46,196,182,0.2); color:var(--success); border-left:4px solid var(--success); }
+        .feedback.incorrect { background:rgba(231,29,54,0.15); color:var(--danger); border-left:4px solid var(--danger); }
 
         /* Accuracy gauge */
-        .accuracy-gauge {
-            margin: 20px 0;
-            text-align: center;
-        }
-
-        .gauge-container {
-            width: 200px;
-            height: 120px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        .gauge-label {
-            font-size: 1.1rem;
-            color: var(--secondary);
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
+        .accuracy-gauge { margin:14px 0; text-align:center; }
+        .gauge-container { width:200px; height:120px; margin:0 auto; position:relative; }
+        .gauge-label { font-size:1rem; color:var(--secondary); margin-bottom:8px; font-weight:700; }
 
         /* End screen */
-        .end-content {
-            text-align: center;
-        }
+        .end-content { text-align:center; }
+        .final-score { font-size:3.5rem; color:var(--primary); font-weight:900; margin:24px 0; font-family:'JetBrains Mono',monospace; }
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin:24px 0; }
+        .stat-card { background:white; padding:22px; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
+        .stat-value { font-size:2.2rem; font-weight:900; color:var(--secondary); margin-bottom:8px; font-family:'JetBrains Mono',monospace; }
+        .stat-label { font-size:0.95rem; color:var(--text-dark); font-weight:700; }
 
-        .final-score {
-            font-size: 4rem;
-            color: var(--primary);
-            font-weight: 900;
-            margin: 30px 0;
-            text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
-        }
+        /* Modal */
+        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; justify-content:center; align-items:center; }
+        .modal-overlay.active { display:flex; }
+        .modal-content { background:white; padding:36px; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.3); max-width:380px; text-align:center; animation:modalSlideIn 0.3s ease-out; }
+        @keyframes modalSlideIn { from { transform:scale(0.8); opacity:0; } to { transform:scale(1); opacity:1; } }
+        .modal-content h3 { color:var(--secondary); margin-bottom:16px; font-size:1.4rem; font-weight:800; }
+        .modal-buttons { display:flex; gap:12px; justify-content:center; margin-top:22px; }
+        .modal-buttons .btn { flex:1; }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin: 30px 0;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--secondary);
-            margin-bottom: 10px;
-        }
-
-        .stat-label {
-            font-size: 1rem;
-            color: var(--text-dark);
-            font-weight: 600;
-        }
-
-        /* Custom modal dialog */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 400px;
-            text-align: center;
-            animation: modalSlideIn 0.3s ease-out;
-        }
-
-        @keyframes modalSlideIn {
-            from {
-                transform: scale(0.8);
-                opacity: 0;
-            }
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        .modal-content h3 {
-            color: var(--secondary);
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 25px;
-        }
-
-        .modal-buttons .btn {
-            flex: 1;
-        }
-
-        /* Responsive design */
-        @media (max-width: 768px) {
-            .screen {
-                padding: 20px;
-            }
-
-            h1 {
-                font-size: 2rem;
-            }
-
-            .game-header {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .timer-section {
-                justify-content: center;
-            }
-
-            .input-section {
-                flex-direction: column;
-            }
-
-            .answer-input, .unit-select {
-                width: 100%;
-            }
-        }
-
-        /* Loading animation */
-        .loading {
-            text-align: center;
-            padding: 40px;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(255, 107, 53, 0.3);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        @media(max-width:700px) {
+            .screen { padding:16px; }
+            .diagram-layout { flex-direction:column; }
+            .force-table-container { width:100%; }
+            #gameCanvas { width:100% !important; height:auto !important; }
         }
     </style>
 </head>
 <body>
-    <!-- Background animation -->
     <div class="bg-animation" id="bgAnimation"></div>
 
-    <!-- Custom modal dialog -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-content">
             <h3 id="modalTitle">Confirm</h3>
@@ -548,33 +149,31 @@
     </div>
 
     <div class="container">
-        <!-- Introduction Screen -->
+        <!-- Intro Screen -->
         <div id="introScreen" class="screen active">
             <div class="intro-content">
                 <h1>⚡ MOMENTS DRILL ⚡</h1>
-                <h3>Physics With Keith</h3>
+                <h3 style="color:var(--secondary);margin-bottom:4px;">Physics With Keith</h3>
                 <div class="rules">
                     <h3>🎯 How to Play</h3>
                     <ul>
                         <li>You have <strong>5 minutes</strong> to solve as many moments problems as possible</li>
-                        <li>Each question shows a beam with a pivot and forces acting on it</li>
-                        <li>One quantity (force, distance, or angle) will be missing - you need to find it!</li>
-                        <li>Enter your answer and select the correct unit</li>
-                        <li>Give answers to <strong>2 significant figures or more</strong></li>
-                        <li>You get <strong>3 attempts</strong> per question</li>
-                        <li>First-time correct answers score the most points!</li>
-                        <li>Watch your accuracy gauge - stay in the green!</li>
+                        <li>Each question shows a beam with a pivot and forces — one value is <strong>missing</strong></li>
+                        <li>The table on the left lists each force's distance, angle, and magnitude</li>
+                        <li>Give answers to <strong>at least 2 significant figures</strong></li>
+                        <li>You get <strong>3 attempts</strong> per question — first-time correct scores most!</li>
+                        <li><strong>Hover</strong> over a force arrow to highlight its row in the table</li>
                     </ul>
                 </div>
                 <h2>Choose Your Level</h2>
                 <div class="difficulty-selector">
                     <div class="difficulty-btn" onclick="startGame('gcse')">
                         <h3>📚 GCSE</h3>
-                        <p>Horizontal beams, perpendicular forces. Perfect for learning the basics!</p>
+                        <p>Horizontal beam, perpendicular forces. Master the basics!</p>
                     </div>
                     <div class="difficulty-btn" onclick="startGame('alevel')">
                         <h3>🎓 A-Level</h3>
-                        <p>Angled beams, forces at any angle. For the challenge seekers!</p>
+                        <p>Tilted beam, forces at angles. For the brave!</p>
                     </div>
                 </div>
             </div>
@@ -591,25 +190,38 @@
             </div>
 
             <div class="canvas-container">
-                <canvas id="gameCanvas" width="800" height="400"></canvas>
+                <div class="diagram-layout">
+                    <div class="force-table-container">
+                        <table class="force-table" id="forceTable">
+                            <thead>
+                                <tr>
+                                    <th>Force</th>
+                                    <th>Dist (m)</th>
+                                    <th>Angle (°)</th>
+                                    <th>Mag (N)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="forceTableBody"></tbody>
+                        </table>
+                    </div>
+                    <canvas id="gameCanvas" width="700" height="380"></canvas>
+                </div>
             </div>
 
             <div class="question-section">
                 <div class="question-text" id="questionText">Calculate the missing value...</div>
                 <div class="attempts" id="attemptsText">Attempts remaining: 3</div>
-                
                 <div class="input-section">
-                    <input type="number" class="answer-input" id="answerInput" placeholder="Enter your answer" step="any">
+                    <input type="number" class="answer-input" id="answerInput" placeholder="Your answer" step="any">
                     <select class="unit-select" id="unitSelect">
                         <option value="">Select unit</option>
                         <option value="N">N (Newtons)</option>
                         <option value="m">m (metres)</option>
                         <option value="degrees">° (degrees)</option>
                     </select>
-                    <button class="btn" onclick="checkAnswer()">Submit Answer</button>
-                    <button class="btn secondary small" onclick="skipQuestion()">Skip (-10 accuracy)</button>
+                    <button class="btn" onclick="checkAnswer()">Submit</button>
+                    <button class="btn secondary small" onclick="skipQuestion()">Skip (−10 acc)</button>
                 </div>
-
                 <div id="feedback"></div>
             </div>
 
@@ -626,1084 +238,771 @@
             <div class="end-content">
                 <h1>🎉 GAME OVER! 🎉</h1>
                 <div class="final-score" id="finalScore">0</div>
-                
                 <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value" id="questionsAnswered">0</div>
-                        <div class="stat-label">Questions Seen</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="correctAnswers">0</div>
-                        <div class="stat-label">Correct Answers</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="firstTimeCorrect">0</div>
-                        <div class="stat-label">First-Time Correct</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="finalAccuracy">0%</div>
-                        <div class="stat-label">Final Accuracy</div>
-                    </div>
+                    <div class="stat-card"><div class="stat-value" id="questionsAnswered">0</div><div class="stat-label">Questions Seen</div></div>
+                    <div class="stat-card"><div class="stat-value" id="correctAnswers">0</div><div class="stat-label">Correct Answers</div></div>
+                    <div class="stat-card"><div class="stat-value" id="firstTimeCorrect">0</div><div class="stat-label">First-Time Correct</div></div>
+                    <div class="stat-card"><div class="stat-value" id="finalAccuracy">0%</div><div class="stat-label">Final Accuracy</div></div>
                 </div>
-
                 <button class="btn" onclick="location.reload()">Play Again!</button>
             </div>
         </div>
     </div>
 
     <script>
-        // ==================== AUDIO SYSTEM ====================
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-        function playSound(type) {
+    // ==================== AUDIO ====================
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+        try {
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
-            
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
-            
             switch(type) {
                 case 'correct':
-                    oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
-                    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
-                    oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // G5
+                    oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime+0.1);
+                    oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime+0.2);
                     gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime+0.35);
                     oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + 0.3);
+                    oscillator.stop(audioContext.currentTime+0.35);
                     break;
-                    
                 case 'incorrect':
-                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-                    oscillator.frequency.setValueAtTime(150, audioContext.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(220, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(160, audioContext.currentTime+0.1);
                     gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime+0.25);
                     oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + 0.2);
+                    oscillator.stop(audioContext.currentTime+0.25);
                     break;
-                    
                 case 'click':
                     oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
                     gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime+0.05);
                     oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + 0.05);
+                    oscillator.stop(audioContext.currentTime+0.05);
                     break;
-
                 case 'gameEnd':
-                    // Victory fanfare
-                    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-                    notes.forEach((freq, i) => {
-                        const osc = audioContext.createOscillator();
-                        const gain = audioContext.createGain();
-                        osc.connect(gain);
-                        gain.connect(audioContext.destination);
-                        osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.15);
-                        gain.gain.setValueAtTime(0.2, audioContext.currentTime + i * 0.15);
-                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.15 + 0.3);
-                        osc.start(audioContext.currentTime + i * 0.15);
-                        osc.stop(audioContext.currentTime + i * 0.15 + 0.3);
+                    [523.25,659.25,783.99,1046.50].forEach((freq,i) => {
+                        const o=audioContext.createOscillator(), g=audioContext.createGain();
+                        o.connect(g); g.connect(audioContext.destination);
+                        o.frequency.setValueAtTime(freq,audioContext.currentTime+i*0.15);
+                        g.gain.setValueAtTime(0.2,audioContext.currentTime+i*0.15);
+                        g.gain.exponentialRampToValueAtTime(0.01,audioContext.currentTime+i*0.15+0.3);
+                        o.start(audioContext.currentTime+i*0.15);
+                        o.stop(audioContext.currentTime+i*0.15+0.3);
                     });
                     break;
             }
+        } catch(e){}
+    }
+
+    // ==================== GAME STATE ====================
+    let gameState = {
+        difficulty: 'gcse',
+        score: 0,
+        questionsAnswered: 0,
+        correctAnswers: 0,
+        firstTimeCorrect: 0,
+        timeRemaining: 300,
+        timerInterval: null,
+        currentQuestion: null,
+        attemptsRemaining: 3,
+        accuracyScore: 0,
+        previousAnswers: [],
+        preferredForceCount: 2
+    };
+
+    // ==================== BACKGROUND ====================
+    function createBackgroundParticles() {
+        const bg = document.getElementById('bgAnimation');
+        for (let i=0; i<20; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const size = Math.random()*50+20;
+            p.style.width = size+'px'; p.style.height = size+'px';
+            p.style.left = Math.random()*100+'%'; p.style.top = Math.random()*100+'%';
+            p.style.animationDelay = Math.random()*20+'s';
+            p.style.animationDuration = (Math.random()*10+15)+'s';
+            bg.appendChild(p);
+        }
+    }
+    createBackgroundParticles();
+
+    // ==================== SCREEN MANAGEMENT ====================
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function startGame(difficulty) {
+        playSound('click');
+        Object.assign(gameState, {
+            difficulty, score:0, questionsAnswered:0, correctAnswers:0,
+            firstTimeCorrect:0, timeRemaining:300, accuracyScore:0, preferredForceCount:2
+        });
+        showScreen('gameScreen');
+        startTimer();
+        generateQuestion();
+        drawAccuracyGauge();
+    }
+
+    // ==================== TIMER ====================
+    function startTimer() {
+        const el = document.getElementById('timer');
+        gameState.timerInterval = setInterval(() => {
+            gameState.timeRemaining--;
+            const m = Math.floor(gameState.timeRemaining/60);
+            const s = gameState.timeRemaining%60;
+            el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+            if (gameState.timeRemaining <= 30) el.classList.add('warning');
+            if (gameState.timeRemaining <= 0) endGame();
+        }, 1000);
+    }
+
+    function endGameEarly() {
+        playSound('click');
+        showModal('End Game Early?','Are you sure?', () => endGame());
+    }
+
+    function skipQuestion() {
+        playSound('click');
+        gameState.accuracyScore = Math.max(-100, gameState.accuracyScore-10);
+        gameState.questionsAnswered++;
+        if (gameState.preferredForceCount > 2) gameState.preferredForceCount--;
+        drawAccuracyGauge();
+        generateQuestion();
+    }
+
+    function showModal(title, msg, onConfirm) {
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalMessage').textContent = msg;
+        document.getElementById('modalOverlay').classList.add('active');
+        document.getElementById('modalConfirmBtn').onclick = () => { closeModal(); if(onConfirm) onConfirm(); };
+    }
+    function closeModal() { document.getElementById('modalOverlay').classList.remove('active'); }
+
+    function endGame() {
+        clearInterval(gameState.timerInterval);
+        playSound('gameEnd');
+        document.getElementById('finalScore').textContent = gameState.score;
+        document.getElementById('questionsAnswered').textContent = gameState.questionsAnswered;
+        document.getElementById('correctAnswers').textContent = gameState.correctAnswers;
+        document.getElementById('firstTimeCorrect').textContent = gameState.firstTimeCorrect;
+        const acc = gameState.questionsAnswered > 0 ? Math.round(gameState.correctAnswers/gameState.questionsAnswered*100) : 0;
+        document.getElementById('finalAccuracy').textContent = acc+'%';
+        showScreen('endScreen');
+    }
+
+    // ==================== MATH HELPERS ====================
+    /**
+     * Compute the SIGNED moment of a force about the pivot.
+     * Uses: M = distSign × F × d × cos((beamAngle_deg + fa_deg) × π/180)
+     * where distSign = +1 for 'right', -1 for 'left'.
+     * Positive M = anticlockwise, Negative M = clockwise.
+     */
+    function signedMoment(f, beamAngle_deg) {
+        const distSign = f.side === 'right' ? 1 : -1;
+        return distSign * f.magnitude * f.distance *
+               Math.cos((beamAngle_deg + f.angleFromVertical) * Math.PI / 180);
+    }
+
+    /**
+     * Angle (degrees) between force and beam, always 0°–90°.
+     * This is the angle you use in M = F × d × sin(θ).
+     * sin(θ) = |cos((beamAngle + fa) × π/180)|
+     */
+    function getAngleToBeam(fa_deg, beamAngle_deg) {
+        // |sin(angleToBeam)| = |cos((fa+b)*π/180)|
+        return Math.asin(Math.min(1, Math.abs(Math.cos((fa_deg + beamAngle_deg) * Math.PI / 180)))) * 180 / Math.PI;
+    }
+
+    // ==================== QUESTION GENERATION ====================
+    const MAX_RETRIES = 15;
+    let _retryCount = 0;
+
+    function generateQuestion() {
+        if (_retryCount > MAX_RETRIES) {
+            _retryCount = 0;
         }
 
-        // ==================== GAME STATE ====================
-        let gameState = {
-            difficulty: 'gcse',
-            score: 0,
-            questionsAnswered: 0,
-            correctAnswers: 0,
-            firstTimeCorrect: 0,
-            timeRemaining: 300, // 5 minutes in seconds
-            timerInterval: null,
-            currentQuestion: null,
-            attemptsRemaining: 3,
-            accuracyScore: 0, // -100 to +100, starts at 0
-            previousAnswers: [], // Store previous wrong answers for hint generation
-            preferredForceCount: 2 // Start with 2 forces, increases with correct answers up to 5
+        // Reset UI
+        gameState.attemptsRemaining = 3;
+        gameState.previousAnswers = [];
+        document.getElementById('answerInput').value = '';
+        document.getElementById('unitSelect').value = '';
+        document.getElementById('feedback').innerHTML = '';
+        document.getElementById('attemptsText').textContent = 'Attempts remaining: 3';
+        document.getElementById('attemptsText').classList.remove('low');
+
+        const isGCSE = gameState.difficulty === 'gcse';
+        // Beam angle: 0 for GCSE, small tilt for A-level
+        const beamAngle = isGCSE ? 0 : (Math.floor(Math.random() * 7 - 3) * 5); // -15, -10, -5, 0, 5, 10, 15
+        const numForces = gameState.preferredForceCount;
+
+        // -- Generate forces --
+        const forces = [];
+        const zoneWidth = 1.6 / numForces;
+
+        for (let i = 0; i < numForces; i++) {
+            const side = (i % 2 === 0) ? 'right' : 'left';
+            // Zone-based distance to prevent bunching
+            const zoneCenter = 0.3 + i * zoneWidth + zoneWidth / 2;
+            const maxVariation = zoneWidth * 0.35;
+            const distance = Math.round((zoneCenter + (Math.random() * 2 - 1) * maxVariation) * 100) / 100;
+
+            let fa;
+            if (isGCSE) {
+                // Always perpendicular: up or down
+                fa = Math.random() < 0.5 ? 0 : 180;
+            } else {
+                // A-level: angle to beam in 35°–75° range for a clean diagram
+                const angleToBeam = 35 + Math.random() * 40; // 35° to 75°
+                const isDown = Math.random() < 0.5;
+                // fa = 90 - angleToBeam - beamAngle (up), or add 180 for down
+                fa = (90 - angleToBeam - beamAngle) + (isDown ? 180 : 0);
+            }
+
+            forces.push({
+                magnitude: Math.round(20 + Math.random() * 80), // 20–100 N, integer
+                distance: Math.max(0.20, distance),
+                angleFromVertical: fa,
+                side: side
+            });
+        }
+
+        // -- Pick question type and missing index --
+        const questionTypes = isGCSE ? ['force', 'distance'] : ['force', 'distance', 'angle'];
+        const questionType = questionTypes[Math.floor(Math.random() * questionTypes.length)];
+        const missingIndex = Math.floor(Math.random() * numForces);
+
+        // -- Compute sum of moments for all OTHER forces --
+        let sumOther = 0;
+        forces.forEach((f, idx) => {
+            if (idx !== missingIndex) sumOther += signedMoment(f, beamAngle);
+        });
+
+        const distSign_m = forces[missingIndex].side === 'right' ? 1 : -1;
+        let answer;
+
+        if (questionType === 'force') {
+            // Required: distSign_m × F_m × d_m × cos((b+fa_m)×π/180) = −sumOther
+            const cosVal = Math.cos((beamAngle + forces[missingIndex].angleFromVertical) * Math.PI / 180);
+            const denom = distSign_m * forces[missingIndex].distance * cosVal;
+
+            if (Math.abs(denom) < 0.05) { _retryCount++; return generateQuestion(); }
+
+            answer = -sumOther / denom;
+
+            // If negative, flip force direction to make it physically possible
+            if (answer < 0) {
+                forces[missingIndex].angleFromVertical = (forces[missingIndex].angleFromVertical + 180) % 360;
+                const c2 = Math.cos((beamAngle + forces[missingIndex].angleFromVertical) * Math.PI / 180);
+                answer = -sumOther / (distSign_m * forces[missingIndex].distance * c2);
+            }
+
+            if (answer < 5 || answer > 250) { _retryCount++; return generateQuestion(); }
+            forces[missingIndex].magnitude = answer;
+
+        } else if (questionType === 'distance') {
+            const cosVal = Math.cos((beamAngle + forces[missingIndex].angleFromVertical) * Math.PI / 180);
+            const denom = distSign_m * forces[missingIndex].magnitude * cosVal;
+
+            if (Math.abs(denom) < 0.1) { _retryCount++; return generateQuestion(); }
+
+            answer = -sumOther / denom;
+
+            if (answer < 0) {
+                // Flip side
+                forces[missingIndex].side = forces[missingIndex].side === 'right' ? 'left' : 'right';
+                const ds2 = forces[missingIndex].side === 'right' ? 1 : -1;
+                answer = -sumOther / (ds2 * forces[missingIndex].magnitude * cosVal);
+            }
+
+            if (answer < 0.10 || answer > 3.0) { _retryCount++; return generateQuestion(); }
+            forces[missingIndex].distance = answer;
+
+        } else { // 'angle' (A-level only)
+            // Required: distSign_m × F_m × d_m × cos((b+fa_m)×π/180) = −sumOther
+            // cos((b+fa_m)×π/180) = −sumOther / (distSign_m × F_m × d_m)
+            const cosNeeded = -sumOther / (distSign_m * forces[missingIndex].magnitude * forces[missingIndex].distance);
+
+            if (Math.abs(cosNeeded) > 0.97 || Math.abs(cosNeeded) < 0.10) {
+                _retryCount++; return generateQuestion();
+            }
+
+            // The angle the force makes with the beam: sin(angleToBeam) = |cosNeeded|
+            const angleToBeam = Math.asin(Math.abs(cosNeeded)) * 180 / Math.PI;
+            answer = Math.round(angleToBeam * 10) / 10; // answer in degrees
+
+            // Recover fa from cosNeeded:
+            // cos((b + fa) × π/180) = cosNeeded
+            // (b + fa) = arccos(cosNeeded) in degrees
+            const bPlusFa = Math.acos(cosNeeded) * 180 / Math.PI;
+            forces[missingIndex].angleFromVertical = bPlusFa - beamAngle;
+        }
+
+        _retryCount = 0;
+
+        // -- Store question --
+        const forceLabel = String.fromCharCode(65 + missingIndex);
+        gameState.currentQuestion = {
+            beamAngle, forces, questionType, missingIndex, answer,
+            unit: questionType === 'force' ? 'N' : (questionType === 'distance' ? 'm' : 'degrees'),
+            numForces
         };
 
-        // ==================== BACKGROUND ANIMATION ====================
-        function createBackgroundParticles() {
-            const bgAnimation = document.getElementById('bgAnimation');
-            for (let i = 0; i < 20; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                const size = Math.random() * 50 + 20;
-                particle.style.width = size + 'px';
-                particle.style.height = size + 'px';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.top = Math.random() * 100 + '%';
-                particle.style.animationDelay = Math.random() * 20 + 's';
-                particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
-                bgAnimation.appendChild(particle);
-            }
-        }
+        const questionTexts = {
+            force:    `Find the magnitude of Force ${forceLabel}`,
+            distance: `Find the distance from the pivot to Force ${forceLabel}`,
+            angle:    `Find the angle Force ${forceLabel} makes with the beam`
+        };
+        document.getElementById('questionText').textContent = questionTexts[questionType];
 
-        createBackgroundParticles();
+        drawQuestion();
+    }
 
-        // ==================== SCREEN MANAGEMENT ====================
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(screen => {
-                screen.classList.remove('active');
-            });
-            document.getElementById(screenId).classList.add('active');
-        }
+    // ==================== COLORS ====================
+    const forceColors = ['#E71D36','#2EC4B6','#F7B801','#9C27B0','#FF6B35'];
 
-        // ==================== GAME INITIALIZATION ====================
-        function startGame(difficulty) {
-            playSound('click');
-            gameState.difficulty = difficulty;
-            gameState.score = 0;
-            gameState.questionsAnswered = 0;
-            gameState.correctAnswers = 0;
-            gameState.firstTimeCorrect = 0;
-            gameState.timeRemaining = 300;
-            gameState.accuracyScore = 0;
-            gameState.preferredForceCount = 2; // Start with 2 forces
-            
-            showScreen('gameScreen');
-            startTimer();
-            generateQuestion();
-            drawAccuracyGauge();
-        }
+    // ==================== DRAWING ====================
+    // Hit areas for hover detection
+    let forceHitAreas = [];
 
-        // ==================== TIMER ====================
-        function startTimer() {
-            const timerElement = document.getElementById('timer');
-            
-            gameState.timerInterval = setInterval(() => {
-                gameState.timeRemaining--;
-                
-                const minutes = Math.floor(gameState.timeRemaining / 60);
-                const seconds = gameState.timeRemaining % 60;
-                timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                
-                // Warning when under 30 seconds
-                if (gameState.timeRemaining <= 30) {
-                    timerElement.classList.add('warning');
-                }
-                
-                // End game when time runs out
-                if (gameState.timeRemaining <= 0) {
-                    endGame();
-                }
-            }, 1000);
-        }
+    function drawQuestion() {
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        function endGameEarly() {
-            playSound('click');
-            showModal('End Game Early?', 'Are you sure you want to end the game early?', () => {
-                endGame();
-            });
-        }
+        const q = gameState.currentQuestion;
+        const isGCSE = gameState.difficulty === 'gcse';
+        const centerX = canvas.width / 2 + 20;
+        const centerY = canvas.height / 2 + 20;
+        const beamHalfLen = 300;
+        const bRad = q.beamAngle * Math.PI / 180;
 
-        function skipQuestion() {
-            playSound('click');
-            
-            // Penalty for skipping
-            gameState.accuracyScore = Math.max(-100, gameState.accuracyScore - 10);
-            gameState.questionsAnswered++;
-            
-            // Reduce preferred force count (minimum 2)
-            if (gameState.preferredForceCount > 2) {
-                gameState.preferredForceCount--;
-            }
-            
-            // Update accuracy gauge
-            drawAccuracyGauge();
-            
-            // Generate new question
-            generateQuestion();
-        }
+        const bSX = centerX - beamHalfLen * Math.cos(bRad);
+        const bSY = centerY - beamHalfLen * Math.sin(bRad);
+        const bEX = centerX + beamHalfLen * Math.cos(bRad);
+        const bEY = centerY + beamHalfLen * Math.sin(bRad);
 
-        function showModal(title, message, onConfirm) {
-            document.getElementById('modalTitle').textContent = title;
-            document.getElementById('modalMessage').textContent = message;
-            document.getElementById('modalOverlay').classList.add('active');
-            
-            document.getElementById('modalConfirmBtn').onclick = () => {
-                closeModal();
-                if (onConfirm) onConfirm();
-            };
-        }
+        // Draw beam
+        ctx.strokeStyle = '#004E89';
+        ctx.lineWidth = 8;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(bSX, bSY);
+        ctx.lineTo(bEX, bEY);
+        ctx.stroke();
 
-        function closeModal() {
-            document.getElementById('modalOverlay').classList.remove('active');
-        }
+        // Draw pivot (upward triangle beneath beam)
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(bRad);
+        ctx.fillStyle = '#1A1A2E';
+        ctx.beginPath();
+        ctx.moveTo(-14, 28); ctx.lineTo(14, 28); ctx.lineTo(0, 5);
+        ctx.closePath(); ctx.fill();
+        // Ground line
+        ctx.fillStyle = '#555';
+        ctx.fillRect(-22, 28, 44, 5);
+        ctx.restore();
 
-        function endGame() {
-            clearInterval(gameState.timerInterval);
-            playSound('gameEnd');
-            
-            // Update end screen statistics
-            document.getElementById('finalScore').textContent = gameState.score;
-            document.getElementById('questionsAnswered').textContent = gameState.questionsAnswered;
-            document.getElementById('correctAnswers').textContent = gameState.correctAnswers;
-            document.getElementById('firstTimeCorrect').textContent = gameState.firstTimeCorrect;
-            
-            const accuracyPercent = gameState.questionsAnswered > 0 
-                ? Math.round((gameState.correctAnswers / gameState.questionsAnswered) * 100) 
-                : 0;
-            document.getElementById('finalAccuracy').textContent = accuracyPercent + '%';
-            
-            showScreen('endScreen');
-        }
+        // Reset hit areas
+        forceHitAreas = [];
 
-        // ==================== QUESTION GENERATION ====================
-        function generateQuestion() {
-            // Reset state for new question
-            gameState.attemptsRemaining = 3;
-            gameState.previousAnswers = [];
-            document.getElementById('answerInput').value = '';
-            document.getElementById('unitSelect').value = '';
-            document.getElementById('feedback').innerHTML = '';
-            document.getElementById('attemptsText').textContent = 'Attempts remaining: 3';
-            document.getElementById('attemptsText').classList.remove('low');
-            
-            const isGCSE = gameState.difficulty === 'gcse';
-            
-            // Generate beam angle (GCSE = 0, A-Level = -20 to +20 degrees)
-            const beamAngle = isGCSE ? 0 : (Math.random() * 40 - 20);
-            
-            // Number of forces (use preferredForceCount directly)
-            const numForces = gameState.preferredForceCount;
-            
-            // Generate forces with better spacing using zones
-            const forces = [];
-            
-            // Create zones to prevent overlap
-            const totalRange = 1.5; // 0.5 to 2.0 meters
-            const minDistance = 0.5;
-            const zoneWidth = totalRange / numForces;
-            
-            for (let i = 0; i < numForces; i++) {
-                // For GCSE: forces can point up or down, but perpendicular to beam
-                // For A-Level: forces at various angles
-                let angleFromVertical;
-                if (isGCSE) {
-                    // Perpendicular forces - can point up or down
-                    angleFromVertical = Math.random() < 0.5 ? 0 : 180; // 0 = up, 180 = down
-                } else {
-                    // A-Level: constrain to ±20 degrees from vertical (either up or down)
-                    const nearVertical = Math.random() * 40 - 20; // -20 to +20 degrees
-                    angleFromVertical = Math.random() < 0.5 ? nearVertical : (180 + nearVertical); // up or down
-                }
-                
-                // Position within the zone to prevent overlap
-                const zoneCenter = minDistance + i * zoneWidth + zoneWidth / 2;
-                const maxVariation = (zoneWidth / 2) * 0.7; // 70% of half-zone to ensure gaps
-                const distance = zoneCenter + (Math.random() * 2 - 1) * maxVariation;
-                
-                const force = {
-                    magnitude: Math.random() * 50 + 100, // 100-150 N
-                    distance: distance,
-                    angleFromVertical: angleFromVertical,
-                    side: i % 2 === 0 ? 'left' : 'right' // Alternate sides for better distribution
-                };
-                forces.push(force);
-            }
-            
-            // Decide what to ask for (force, distance, or angle)
-            const questionTypes = isGCSE ? ['force', 'distance'] : ['force', 'distance', 'angle'];
-            const questionType = questionTypes[Math.floor(Math.random() * questionTypes.length)];
-            
-            // Pick which force will have the missing value
-            const missingIndex = Math.floor(Math.random() * numForces);
-            
-            // Calculate correct answer using moments equilibrium
-            // Sum of clockwise moments = Sum of anticlockwise moments
-            let answer;
-            
-            if (questionType === 'force') {
-                // Calculate required force for equilibrium
-                let sumMoments = 0;
-                forces.forEach((f, idx) => {
-                    if (idx !== missingIndex) {
-                        // Calculate perpendicular distance
-                        const angleToBeam = Math.abs(90 - beamAngle - f.angleFromVertical);
-                        const perpDist = f.distance * Math.abs(Math.sin(angleToBeam * Math.PI / 180));
-                        const moment = f.magnitude * perpDist;
-                        
-                        // Determine moment direction (clockwise or anticlockwise)
-                        // For a horizontal beam: left + up = anticlockwise, right + up = clockwise
-                        const forceUp = Math.cos(f.angleFromVertical * Math.PI / 180) > 0;
-                        const isClockwise = (f.side === 'right' && forceUp) || (f.side === 'left' && !forceUp);
-                        
-                        sumMoments += isClockwise ? moment : -moment;
-                    }
-                });
-                
-                const angleToBeam = Math.abs(90 - beamAngle - forces[missingIndex].angleFromVertical);
-                const perpDist = forces[missingIndex].distance * Math.abs(Math.sin(angleToBeam * Math.PI / 180));
-                answer = Math.abs(sumMoments / perpDist);
-                
-                // Ensure answer is reasonable
-                if (answer < 10) answer = 10 + Math.random() * 30;
-                if (answer > 150) answer = 50 + Math.random() * 50;
-                
-                forces[missingIndex].magnitude = answer;
-                
-            } else if (questionType === 'distance') {
-                // Calculate required distance for equilibrium
-                let sumMoments = 0;
-                forces.forEach((f, idx) => {
-                    if (idx !== missingIndex) {
-                        const angleToBeam = Math.abs(90 - beamAngle - f.angleFromVertical);
-                        const perpDist = f.distance * Math.abs(Math.sin(angleToBeam * Math.PI / 180));
-                        const moment = f.magnitude * perpDist;
-                        
-                        const forceUp = Math.cos(f.angleFromVertical * Math.PI / 180) > 0;
-                        const isClockwise = (f.side === 'right' && forceUp) || (f.side === 'left' && !forceUp);
-                        
-                        sumMoments += isClockwise ? moment : -moment;
-                    }
-                });
-                
-                const angleToBeam = Math.abs(90 - beamAngle - forces[missingIndex].angleFromVertical);
-                const sinAngle = Math.abs(Math.sin(angleToBeam * Math.PI / 180));
-                answer = Math.abs(sumMoments / (forces[missingIndex].magnitude * sinAngle));
-                
-                // Ensure answer is reasonable
-                if (answer < 0.2) answer = 0.3 + Math.random() * 0.5;
-                if (answer > 2.5) answer = 0.8 + Math.random() * 1.0;
-                
-                forces[missingIndex].distance = answer;
-                
-            } else { // angle
-                // Calculate required angle for equilibrium
-                let sumMoments = 0;
-                forces.forEach((f, idx) => {
-                    if (idx !== missingIndex) {
-                        const angleToBeam = Math.abs(90 - beamAngle - f.angleFromVertical);
-                        const perpDist = f.distance * Math.abs(Math.sin(angleToBeam * Math.PI / 180));
-                        const moment = f.magnitude * perpDist;
-                        
-                        const forceUp = Math.cos(f.angleFromVertical * Math.PI / 180) > 0;
-                        const isClockwise = (f.side === 'right' && forceUp) || (f.side === 'left' && !forceUp);
-                        
-                        sumMoments += isClockwise ? moment : -moment;
-                    }
-                });
-                
-                const requiredSin = Math.abs(sumMoments / (forces[missingIndex].magnitude * forces[missingIndex].distance));
-                
-                // Ensure sin value is valid (between 0 and 1)
-                if (requiredSin > 1 || requiredSin < 0.1) {
-                    // Adjust force magnitude to make angle reasonable
-                    forces[missingIndex].magnitude = Math.abs(sumMoments / (forces[missingIndex].distance * 0.7));
-                    const newRequiredSin = 0.7;
-                    const angleToBeam = Math.asin(newRequiredSin) * 180 / Math.PI;
-                    answer = 90 - beamAngle - angleToBeam;
-                } else {
-                    const angleToBeam = Math.asin(Math.min(requiredSin, 1)) * 180 / Math.PI;
-                    answer = 90 - beamAngle - angleToBeam;
-                }
-                
-                forces[missingIndex].angleFromVertical = answer;
-            }
-            
-            // Store question data
-            gameState.currentQuestion = {
-                beamAngle,
-                forces,
-                questionType,
-                missingIndex,
-                answer,
-                unit: questionType === 'force' ? 'N' : (questionType === 'distance' ? 'm' : 'degrees'),
-                numForces: numForces,
-                // For A-Level angles, randomly choose whether to show from beam or from normal
-                angleDisplayMethod: {} // Will store per-force whether to show from beam or normal
-            };
-            
-            // For A-Level, randomly decide for each force whether to show angle from beam or normal
-            if (!isGCSE) {
-                forces.forEach((force, idx) => {
-                    // If angle to beam is small (< 30°), show from beam. If large (> 60°), show from normal.
-                    // In between, random choice
-                    const angleToBeam = Math.abs(90 - beamAngle - force.angleFromVertical);
-                    if (angleToBeam < 30) {
-                        gameState.currentQuestion.angleDisplayMethod[idx] = 'beam';
-                    } else if (angleToBeam > 60) {
-                        gameState.currentQuestion.angleDisplayMethod[idx] = 'normal';
-                    } else {
-                        gameState.currentQuestion.angleDisplayMethod[idx] = Math.random() < 0.5 ? 'beam' : 'normal';
-                    }
-                });
-            }
-            
-            // Update question text
-            const forceLabel = String.fromCharCode(65 + missingIndex); // A, B, C, etc.
-            const questionTexts = {
-                force: `Find the magnitude of Force ${forceLabel}`,
-                distance: `Find the distance from the pivot to Force ${forceLabel}`,
-                angle: gameState.currentQuestion.angleDisplayMethod[missingIndex] === 'normal' 
-                    ? `Find the angle of Force ${forceLabel} (from the normal to the beam)`
-                    : `Find the angle of Force ${forceLabel} (from the beam)`
-            };
-            document.getElementById('questionText').textContent = questionTexts[questionType];
-            
-            // Draw the question
-            drawQuestion();
-        }
+        // Draw each force
+        q.forces.forEach((force, idx) => {
+            const isMissing = idx === q.missingIndex;
+            const color = forceColors[idx % forceColors.length];
+            const label = String.fromCharCode(65 + idx);
 
-        // ==================== DRAWING ====================
-        // Color palette for different forces
-        const forceColors = [
-            '#E71D36', // Red
-            '#2EC4B6', // Teal
-            '#F7B801', // Yellow
-            '#9C27B0', // Purple
-            '#FF6B35'  // Orange
-        ];
+            // Position along beam
+            const dist_px = force.distance * 100;
+            const signedDist = force.side === 'right' ? dist_px : -dist_px;
+            const fx = centerX + signedDist * Math.cos(bRad);
+            const fy = centerY + signedDist * Math.sin(bRad);
 
-        function drawQuestion() {
-            const canvas = document.getElementById('gameCanvas');
-            const ctx = canvas.getContext('2d');
-            
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            const q = gameState.currentQuestion;
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const beamLength = 600;
-            const pivotX = centerX;
-            const pivotY = centerY;
-            
-            // Convert beam angle to radians
-            const beamAngleRad = q.beamAngle * Math.PI / 180;
-            
-            // Calculate beam endpoints
-            const beamStartX = pivotX - (beamLength / 2) * Math.cos(beamAngleRad);
-            const beamStartY = pivotY - (beamLength / 2) * Math.sin(beamAngleRad);
-            const beamEndX = pivotX + (beamLength / 2) * Math.cos(beamAngleRad);
-            const beamEndY = pivotY + (beamLength / 2) * Math.sin(beamAngleRad);
-            
-            // Draw beam
-            ctx.strokeStyle = '#004E89';
-            ctx.lineWidth = 8;
-            ctx.beginPath();
-            ctx.moveTo(beamStartX, beamStartY);
-            ctx.lineTo(beamEndX, beamEndY);
-            ctx.stroke();
-            
-            // Draw pivot (triangle pointing UP - beam balances on it)
-            // Position it so the point touches the BOTTOM of the beam
+            // Tick mark on beam at force point
             ctx.save();
-            ctx.translate(pivotX, pivotY);
-            ctx.rotate(beamAngleRad);
-            ctx.fillStyle = '#1A1A2E';
-            ctx.beginPath();
-            ctx.moveTo(-15, 25); // Top left of triangle base
-            ctx.lineTo(15, 25);  // Top right of triangle base
-            ctx.lineTo(0, 4); // Point at top
-            ctx.closePath();
-            ctx.fill();
-            ctx.restore();
-            
-            // Draw each force with its measurements
-            q.forces.forEach((force, idx) => {
-                const isMissing = idx === q.missingIndex;
-                const forceColor = forceColors[idx % forceColors.length];
-                const forceLabel = String.fromCharCode(65 + idx); // A, B, C, etc.
-                
-                const distanceAlongBeam = force.side === 'left' ? -force.distance * 100 : force.distance * 100;
-                
-                // Calculate force application point ON beam
-                const forceX = pivotX + distanceAlongBeam * Math.cos(beamAngleRad);
-                const forceY = pivotY + distanceAlongBeam * Math.sin(beamAngleRad);
-                
-                // Draw dimension line for distance (staggered)
-                drawDimensionLine(ctx, pivotX, pivotY, forceX, forceY, beamAngleRad, idx, 
-                    isMissing && q.questionType === 'distance' ? '?' : force.distance.toFixed(2) + 'm', 
-                    forceColor);
-                
-                // Draw force arrow - starts ON the beam
-                const forceAngleRad = force.angleFromVertical * Math.PI / 180;
-                const arrowLength = (isMissing && q.questionType === 'force') ? 80 : (force.magnitude * 0.8);
-                
-                ctx.save();
-                ctx.translate(forceX, forceY);
-                ctx.rotate(-forceAngleRad);
-                
-                // Arrow shaft
-                ctx.strokeStyle = forceColor;
-                ctx.lineWidth = 5;
-                
-                // Improved Arrow shaft
-                ctx.strokeStyle = forceColor;
-                ctx.lineWidth = 5;
-                ctx.lineCap = 'round'; // Makes the join cleaner
-                ctx.beginPath();
-                ctx.moveTo(0, 0); 
-                // Stop the shaft 15 pixels before the tip so it doesn't poke through
-                ctx.lineTo(0, -arrowLength + 15); 
-                ctx.stroke();
-                
-                // Improved Arrow head
-                ctx.fillStyle = forceColor;
-                ctx.beginPath();
-                ctx.moveTo(0, -arrowLength); // The tip
-                ctx.lineTo(-10, -arrowLength + 18); // Bottom left
-                ctx.lineTo(10, -arrowLength + 18);  // Bottom right
-                ctx.closePath();
-                ctx.fill();
-                
-                // Force label and magnitude at the end of arrow
-                // Always keep text right-side up
-                ctx.save();
-                const textAngle = -forceAngleRad;
-                if (Math.abs(textAngle) > Math.PI / 2) {
-                    ctx.rotate(Math.PI); // Flip text if it would be upside down
-                    ctx.fillStyle = forceColor;
-                    ctx.font = 'bold 18px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(forceLabel, 0, arrowLength + 35);
-                    
-                    ctx.font = 'bold 16px Arial';
-                    const forceText = isMissing && q.questionType === 'force' ? '?' : force.magnitude.toFixed(1) + 'N';
-                    ctx.fillText(forceText, 0, arrowLength + 18);
-                } else {
-                    ctx.fillStyle = forceColor;
-                    ctx.font = 'bold 18px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(forceLabel, 0, -arrowLength - 25);
-                    
-                    ctx.font = 'bold 16px Arial';
-                    const forceText = isMissing && q.questionType === 'force' ? '?' : force.magnitude.toFixed(1) + 'N';
-                    ctx.fillText(forceText, 0, -arrowLength - 8);
-                }
-                ctx.restore();
-                
-                ctx.restore();
-                
-                // Draw angle (if A-Level or if this is the missing angle)
-                if (gameState.difficulty === 'alevel' || (isMissing && q.questionType === 'angle')) {
-                    const displayMethod = q.angleDisplayMethod[idx] || 'beam';
-                    let angleValue;
-                    if (isMissing && q.questionType === 'angle') {
-                        angleValue = '?';
-                    } else {
-                        // For A-Level, show angle from vertical (more meaningful for moments)
-                        angleValue = Math.abs(force.angleFromVertical).toFixed(1) + '°';
-                    }
-                    
-                    drawAngleArc(ctx, forceX, forceY, beamAngleRad, force.angleFromVertical, 
-                        angleValue, forceColor, displayMethod);
-                }
-            });
-        }
-
-        function drawDimensionLine(ctx, x1, y1, x2, y2, beamAngle, forceIndex, label, color) {
-            // Offset distance lines perpendicular to beam to avoid overlap
-            const offset = 40 + forceIndex * 30;
-            const perpAngle = beamAngle + Math.PI / 2;
-            
-            // Offset both points
-            const offsetX = offset * Math.cos(perpAngle);
-            const offsetY = offset * Math.sin(perpAngle);
-            
-            const startX = x1 + offsetX;
-            const startY = y1 + offsetY;
-            const endX = x2 + offsetX;
-            const endY = y2 + offsetY;
-            
+            ctx.translate(fx, fy);
+            ctx.rotate(bRad + Math.PI / 2);
             ctx.strokeStyle = color;
-            ctx.fillStyle = color;
-            ctx.lineWidth = 2;
-            
-            // Draw main line
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(endX, endY);
-            ctx.stroke();
-            
-            // Draw arrows at both ends
-            const arrowSize = 8;
-            const angle = Math.atan2(endY - startY, endX - startX);
-            
-            // Start arrow
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(startX + arrowSize * Math.cos(angle + 2.8), startY + arrowSize * Math.sin(angle + 2.8));
-            ctx.lineTo(startX + arrowSize * Math.cos(angle - 2.8), startY + arrowSize * Math.sin(angle - 2.8));
-            ctx.closePath();
-            ctx.fill();
-            
-            // End arrow
-            ctx.beginPath();
-            ctx.moveTo(endX, endY);
-            ctx.lineTo(endX - arrowSize * Math.cos(angle + 2.8), endY - arrowSize * Math.sin(angle + 2.8));
-            ctx.lineTo(endX - arrowSize * Math.cos(angle - 2.8), endY - arrowSize * Math.sin(angle - 2.8));
-            ctx.closePath();
-            ctx.fill();
-            
-            // Draw extension lines to beam
-            ctx.setLineDash([3, 3]);
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(startX, startY);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x2, y2);
-            ctx.lineTo(endX, endY);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            
-            // Label - always keep text right-side up
-            const midX = (startX + endX) / 2;
-            const midY = (startY + endY) / 2;
-            
-            ctx.save();
-            ctx.translate(midX, midY);
-            
-            // Rotate text but keep it right-side up
-            let textAngle = angle;
-            if (Math.abs(angle) > Math.PI / 2) {
-                textAngle = angle + Math.PI;
-            }
-            ctx.rotate(textAngle);
-            
-            // Background for text
-            ctx.fillStyle = 'white';
-            ctx.fillRect(-35, -12, 70, 18);
-            
-            ctx.fillStyle = color;
-            ctx.font = 'bold 14px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(label, 0, 0);
-            
-            ctx.restore();
-        }
-
-        function drawAngleArc(ctx, x, y, beamAngle, forceAngleFromVertical, label, color, displayMethod) {
-            /*
-            ========================================================================
-            ANGLE ARC DRAWING - READ THIS TO FIX THE ANGLE ARCS
-            ========================================================================
-            
-            INPUTS:
-            - beamAngle: angle of the beam in CANVAS coordinates (radians)
-                * 0 = horizontal right
-                * -π/2 ≈ -1.57 = pointing up
-                * π = horizontal left
-            
-            - forceAngleFromVertical: angle of force from vertical in PHYSICS (degrees)
-                * 0° = force points straight up
-                * 90° = force points horizontal right
-                * 180° = force points straight down
-                * Positive = clockwise from vertical
-            
-            - label: the text to show (e.g., "15.6°")
-            
-            - displayMethod: 'beam' or 'normal'
-                * 'beam' = show arc from beam to force
-                * 'normal' = show arc from perpendicular-to-beam to force
-            
-            ========================================================================
-            FORCE ARROW DIRECTION IN CANVAS:
-            ========================================================================
-            The force arrow is drawn with this rotation: -forceAngleFromVertical*π/180
-            Starting from pointing UP (negative Y direction)
-            
-            So in canvas radians, the force points in direction:
-            */
-            
-            ctx.save();
-            ctx.translate(x, y);
-            
-            const arcRadius = 30;
-            
-            // Convert force angle from physics degrees to canvas radians
-            const forceAngleRad = forceAngleFromVertical * Math.PI / 180;
-            
-            // CRITICAL: Where does the force arrow actually point in canvas coordinates?
-            // The arrow drawing code does: rotate(-forceAngleRad), then draw upward
-            // Upward in canvas = -π/2
-            // After rotation: -π/2 + (-forceAngleRad) = -π/2 - forceAngleRad
-            const forceDirectionInCanvas = -Math.PI/2 - forceAngleRad;
-            
-            // DEBUG: Uncomment to see the angles
-            // console.log('Force angle from vertical:', forceAngleFromVertical, '°');
-            // console.log('Force direction in canvas:', forceDirectionInCanvas, 'rad =', forceDirectionInCanvas * 180/Math.PI, '°');
-            // console.log('Beam angle in canvas:', beamAngle, 'rad =', beamAngle * 180/Math.PI, '°');
-            
-            if (displayMethod === 'normal') {
-                // ====================================================================
-                // CASE 1: Show arc from NORMAL (perpendicular to beam) to FORCE
-                // ====================================================================
-                
-                // The normal is perpendicular to the beam
-                // If beam is at angle θ, normal is at θ ± π/2
-                // Choose which side based on where the force is
-                const forcePointsGenerallyUp = (forceDirectionInCanvas % (2*Math.PI)) < 0 || (forceDirectionInCanvas % (2*Math.PI)) > Math.PI;
-                const normalAngle = beamAngle + (forcePointsGenerallyUp ? -Math.PI / 2 : Math.PI / 2);
-                
-                // Draw dashed normal line
-                ctx.strokeStyle = color;
-                ctx.setLineDash([5, 5]);
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(55 * Math.cos(normalAngle), 55 * Math.sin(normalAngle));
-                ctx.stroke();
-                ctx.setLineDash([]);
-                
-                // Calculate angle from normal to force
-                let angleDiff = forceDirectionInCanvas - normalAngle;
-                // Normalize to -π to π
-                while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
-                while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-                
-                // Arc direction: counterclockwise if angleDiff is negative
-                const counterclockwise = angleDiff < 0;
-                
-                // Draw arc from normal to force
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.arc(0, 0, arcRadius, normalAngle, forceDirectionInCanvas, counterclockwise);
-                ctx.stroke();
-                
-                // Label at midpoint
-                const midAngle = normalAngle + angleDiff / 2;
-                const labelDist = arcRadius + 18;
-                ctx.fillStyle = color;
-                ctx.font = 'bold 16px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(label, labelDist * Math.cos(midAngle), labelDist * Math.sin(midAngle));
-                
-            } else {
-                // ====================================================================
-                // CASE 2: Show arc from BEAM to FORCE
-                // ====================================================================
-                
-                // Calculate angle from beam to force
-                let angleDiff = forceDirectionInCanvas - beamAngle;
-                // Normalize to -π to π
-                while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
-                while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-                
-                // Arc direction: counterclockwise if angleDiff is negative
-                const counterclockwise = angleDiff < 0;
-                
-                // Draw arc from beam to force
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.arc(0, 0, arcRadius, beamAngle, forceDirectionInCanvas, counterclockwise);
-                ctx.stroke();
-                
-                // Label at midpoint
-                const midAngle = beamAngle + angleDiff / 2;
-                const labelDist = arcRadius + 18;
-                ctx.fillStyle = color;
-                ctx.font = 'bold 16px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(label, labelDist * Math.cos(midAngle), labelDist * Math.sin(midAngle));
-            }
-            
-            ctx.restore();
-            
-            /*
-            ========================================================================
-            TO FIX THE ARCS:
-            ========================================================================
-            
-            The issue is probably that the LABEL shows one angle but the ARC shows
-            a different angle. 
-            
-            For example:
-            - label might say "15.6°" (angle from vertical)
-            - but arc shows angle from BEAM to force (which could be different if beam is tilted)
-            
-            TO FIX: You need to make sure the arc matches what the label says.
-            
-            If label shows angle from vertical:
-            - Start arc at: -Math.PI/2 (vertical up)
-            - End arc at: forceDirectionInCanvas
-            
-            If label shows angle from beam:
-            - Start arc at: beamAngle
-            - End arc at: forceDirectionInCanvas
-            
-            If label shows angle from normal:
-            - Start arc at: normalAngle
-            - End arc at: forceDirectionInCanvas
-            ========================================================================
-            */
-        }
-
-        // ==================== ANSWER CHECKING ====================
-        function roundToSigFigs(num, sigFigs) {
-            if (num === 0) return 0;
-            const magnitude = Math.floor(Math.log10(Math.abs(num)));
-            const factor = Math.pow(10, sigFigs - magnitude - 1);
-            return Math.round(num * factor) / factor;
-        }
-
-        function countSigFigs(numStr) {
-            // Remove leading zeros and decimal point
-            const cleaned = numStr.replace(/^0+/, '').replace('.', '');
-            // Count remaining digits
-            return cleaned.length;
-        }
-
-        function checkAnswer() {
-            playSound('click');
-            
-            const userAnswer = parseFloat(document.getElementById('answerInput').value);
-            const userUnit = document.getElementById('unitSelect').value;
-            const correctAnswer = gameState.currentQuestion.answer;
-            const correctUnit = gameState.currentQuestion.unit;
-            
-            const feedbackDiv = document.getElementById('feedback');
-            
-            // Validation
-            if (isNaN(userAnswer)) {
-                feedbackDiv.innerHTML = '<div class="feedback incorrect">Please enter a number!</div>';
-                return;
-            }
-            
-            if (!userUnit) {
-                feedbackDiv.innerHTML = '<div class="feedback incorrect">Please select a unit!</div>';
-                return;
-            }
-            
-            // Check significant figures
-            const userAnswerStr = document.getElementById('answerInput').value.trim();
-            const sigFigs = countSigFigs(userAnswerStr);
-            
-            if (sigFigs < 2) {
-                gameState.attemptsRemaining--;
-                updateAttemptsDisplay();
-                feedbackDiv.innerHTML = '<div class="feedback incorrect">❌ Please give your answer to at least 2 significant figures!</div>';
-                
-                if (gameState.attemptsRemaining === 0) {
-                    handleIncorrect(true);
-                }
-                return;
-            }
-            
-            // Store answer for hint generation
-            gameState.previousAnswers.push({ answer: userAnswer, unit: userUnit });
-            
-            // Check unit
-            if (userUnit !== correctUnit) {
-                gameState.attemptsRemaining--;
-                updateAttemptsDisplay();
-                
-                const hint = `Wrong unit! You need ${correctUnit}, not ${userUnit}.`;
-                feedbackDiv.innerHTML = `<div class="feedback incorrect">❌ ${hint}</div>`;
-                playSound('incorrect');
-                
-                if (gameState.attemptsRemaining === 0) {
-                    handleIncorrect(true);
-                }
-                return;
-            }
-            
-            // Round both answers to 2 significant figures for comparison
-            const userRounded = roundToSigFigs(userAnswer, 2);
-            const correctRounded = roundToSigFigs(correctAnswer, 2);
-            
-            if (Math.abs(userRounded - correctRounded) < 0.01) {
-                // CORRECT!
-                handleCorrect();
-            } else {
-                // INCORRECT
-                gameState.attemptsRemaining--;
-                updateAttemptsDisplay();
-                
-                const hint = generateHint(userAnswer, correctAnswer);
-                feedbackDiv.innerHTML = `<div class="feedback incorrect">❌ ${hint}</div>`;
-                playSound('incorrect');
-                
-                if (gameState.attemptsRemaining === 0) {
-                    handleIncorrect(true);
-                }
-            }
-        }
-
-        function updateAttemptsDisplay() {
-            const attemptsText = document.getElementById('attemptsText');
-            attemptsText.textContent = `Attempts remaining: ${gameState.attemptsRemaining}`;
-            if (gameState.attemptsRemaining <= 1) {
-                attemptsText.classList.add('low');
-            }
-        }
-
-        function generateHint(userAnswer, correctAnswer) {
-            const ratio = userAnswer / correctAnswer;
-            
-            // Check if they're close
-            if (ratio > 0.9 && ratio < 1.1) {
-                return "Very close! Check your calculation carefully.";
-            }
-            
-            // Check for common mistakes
-            if (Math.abs(ratio - 2) < 0.1) {
-                return "Your answer is about twice what it should be. Did you forget to divide by 2 somewhere?";
-            }
-            
-            if (Math.abs(ratio - 0.5) < 0.1) {
-                return "Your answer is about half what it should be. Did you multiply instead of divide?";
-            }
-            
-            // Angle-specific hints
-            if (gameState.currentQuestion.questionType === 'angle') {
-                if (Math.abs(userAnswer - (90 - correctAnswer)) < 5) {
-                    return "Check whether you're measuring from the right reference line (vertical vs. normal to beam).";
-                }
-                return "Remember: use the perpendicular distance in your moments calculation. Check your trigonometry!";
-            }
-            
-            // Too high or too low
-            if (userAnswer > correctAnswer * 1.5) {
-                return "Your answer is too high. Double-check your calculation.";
-            }
-            
-            if (userAnswer < correctAnswer * 0.5) {
-                return "Your answer is too low. Make sure you're using all the forces in your calculation.";
-            }
-            
-            return "Not quite right. Remember: sum of clockwise moments = sum of anticlockwise moments.";
-        }
-
-        function handleCorrect() {
-            playSound('correct');
-            
-            const isFirstAttempt = gameState.attemptsRemaining === 3;
-            const numForces = gameState.currentQuestion.numForces;
-            
-            // Award points - base points plus bonus for more forces
-            const basePoints = isFirstAttempt ? 100 : (gameState.attemptsRemaining === 2 ? 60 : 30);
-            const forceBonus = (numForces - 2) * 20; // 20 points per additional force beyond 2
-            const points = basePoints + forceBonus;
-            
-            gameState.score += points;
-            document.getElementById('score').textContent = gameState.score;
-            
-            // Update statistics
-            gameState.questionsAnswered++;
-            gameState.correctAnswers++;
-            if (isFirstAttempt) {
-                gameState.firstTimeCorrect++;
-                gameState.accuracyScore = Math.min(100, gameState.accuracyScore + 10);
-                // Increase difficulty: add one more force (up to max 5)
-                if (gameState.preferredForceCount < 5) {
-                    gameState.preferredForceCount++;
-                }
-            } else {
-                gameState.accuracyScore = Math.max(-100, gameState.accuracyScore - 5);
-            }
-            
-            // Show feedback
-            const feedbackDiv = document.getElementById('feedback');
-            const messages = ['Excellent!', 'Perfect!', 'Brilliant!', 'Outstanding!', 'Superb!'];
-            const message = messages[Math.floor(Math.random() * messages.length)];
-            feedbackDiv.innerHTML = `<div class="feedback correct">✅ ${message} +${points} points!</div>`;
-            
-            // Update accuracy gauge
-            drawAccuracyGauge();
-            
-            // Move to next question after delay
-            setTimeout(() => {
-                generateQuestion();
-            }, 2000);
-        }
-
-        function handleIncorrect(showAnswer = false) {
-            gameState.questionsAnswered++;
-            gameState.accuracyScore = Math.max(-100, gameState.accuracyScore - 15);
-            
-            if (showAnswer) {
-                const correctAnswer = gameState.currentQuestion.answer;
-                const correctUnit = gameState.currentQuestion.unit;
-                const feedbackDiv = document.getElementById('feedback');
-                feedbackDiv.innerHTML = `<div class="feedback incorrect">❌ Out of attempts! The correct answer was ${correctAnswer.toFixed(2)} ${correctUnit}</div>`;
-                
-                // Update accuracy gauge
-                drawAccuracyGauge();
-                
-                // Move to next question after delay
-                setTimeout(() => {
-                    generateQuestion();
-                }, 3000);
-            }
-        }
-
-        // ==================== ACCURACY GAUGE ====================
-        function drawAccuracyGauge() {
-            const canvas = document.getElementById('gaugeCanvas');
-            const ctx = canvas.getContext('2d');
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height - 10;
-            const radius = 80;
-            
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw gauge background arc
-            ctx.strokeStyle = '#e0e0e0';
-            ctx.lineWidth = 15;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, Math.PI, 2 * Math.PI, false);
-            ctx.stroke();
-            
-            // Draw colored sections
-            const sections = [
-                { start: Math.PI, end: Math.PI + Math.PI / 3, color: '#E71D36' }, // Red
-                { start: Math.PI + Math.PI / 3, end: Math.PI + 2 * Math.PI / 3, color: '#F7B801' }, // Yellow
-                { start: Math.PI + 2 * Math.PI / 3, end: 2 * Math.PI, color: '#2EC4B6' } // Green
-            ];
-            
-            sections.forEach(section => {
-                ctx.strokeStyle = section.color;
-                ctx.lineWidth = 15;
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius, section.start, section.end, false);
-                ctx.stroke();
-            });
-            
-            // Calculate needle angle based on accuracy score (-100 to +100)
-            const normalizedScore = (gameState.accuracyScore + 100) / 200; // 0 to 1
-            const needleAngle = Math.PI + normalizedScore * Math.PI;
-            
-            // Draw needle
-            ctx.strokeStyle = '#1A1A2E';
             ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.moveTo(centerX, centerY);
-            ctx.lineTo(
-                centerX + (radius - 10) * Math.cos(needleAngle),
-                centerY + (radius - 10) * Math.sin(needleAngle)
-            );
+            ctx.moveTo(-7, 0); ctx.lineTo(7, 0);
             ctx.stroke();
-            
-            // Draw center circle
-            ctx.fillStyle = '#1A1A2E';
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, 8, 0, 2 * Math.PI);
-            ctx.fill();
-        }
+            ctx.restore();
 
-        // ==================== KEYBOARD SUPPORT ====================
-        document.getElementById('answerInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                checkAnswer();
+            // Arrow: uniform length 85px
+            const arrowLen = 85;
+            const faRad = force.angleFromVertical * Math.PI / 180;
+
+            // Force direction in canvas: tip offset from base
+            const tipDx = -Math.sin(faRad) * arrowLen;
+            const tipDy = -Math.cos(faRad) * arrowLen;
+            const tipX = fx + tipDx;
+            const tipY = fy + tipDy;
+
+            // Store midpoint for hover
+            forceHitAreas.push({
+                x: fx + tipDx / 2,
+                y: fy + tipDy / 2,
+                idx
+            });
+
+            // Arrow shaft
+            ctx.save();
+            ctx.translate(fx, fy);
+            ctx.rotate(-faRad);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = (isMissing && q.questionType === 'force') ? 3 : 5;
+            ctx.setLineDash((isMissing && q.questionType === 'force') ? [8, 5] : []);
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, -arrowLen + 14);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Arrowhead
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(0, -arrowLen);
+            ctx.lineTo(-9, -arrowLen + 17);
+            ctx.lineTo(9, -arrowLen + 17);
+            ctx.closePath();
+            ctx.fill();
+
+            // Label at MIDPOINT of arrow shaft, offset to the right (perpendicular)
+            // Perpendicular direction in local frame: (1, 0) when un-rotated → to the right
+            // In world coords, un-rotate and draw
+            ctx.translate(0, -arrowLen / 2);
+            ctx.rotate(faRad); // un-rotate to keep text readable
+            ctx.fillStyle = color;
+            ctx.font = 'bold 16px Nunito, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            // Determine which side to put label based on arrow direction to avoid beam overlap
+            const labelOffset = 13;
+            // Background pill
+            const labelW = ctx.measureText(label).width + 10;
+            ctx.fillStyle = 'rgba(255,255,255,0.85)';
+            ctx.fillRect(labelOffset - 2, -10, labelW, 20);
+            ctx.fillStyle = color;
+            ctx.fillText(label, labelOffset + 3, 0);
+
+            ctx.restore();
+
+            // Draw angle arc (for A-level, or if GCSE and showing the concept visually)
+            if (!isGCSE) {
+                const angleToBeam = getAngleToBeam(force.angleFromVertical, q.beamAngle);
+                const arcLabel = (isMissing && q.questionType === 'angle') ? '?' : angleToBeam.toFixed(1) + '°';
+                drawAngleArc(ctx, fx, fy, bRad, faRad, force.side, arcLabel, color);
             }
         });
 
-        // Initialize accuracy gauge on load
-        window.addEventListener('load', () => {
-            drawAccuracyGauge();
+        // Build force table
+        buildForceTable(q, isGCSE);
+    }
+
+    /**
+     * Draw arc showing the angle between force and the nearest end of the beam.
+     * The arc angle always matches the "angle to beam" value shown in the table
+     * (i.e. always the ACUTE angle, 0°–90°).
+     *
+     * @param {number} bRad  - beam angle in canvas radians (0 = right)
+     * @param {number} faRad - force.angleFromVertical in radians
+     * @param {string} side  - 'right' or 'left' (preferred outward beam direction)
+     * @param {string} label - text to display (e.g. "40.0°" or "?")
+     */
+    function drawAngleArc(ctx, x, y, bRad, faRad, side, label, color) {
+        ctx.save();
+        ctx.translate(x, y);
+
+        const arcRadius = 32;
+
+        // Force direction in canvas (angle from +x axis, clockwise positive)
+        const forceDir = -Math.PI / 2 - faRad;
+
+        // Try both ends of the beam; pick the one that gives the smaller (acute) arc
+        const beamDirA = bRad;           // outward end
+        const beamDirB = bRad + Math.PI; // opposite end
+
+        function normDiff(a, b) {
+            let d = a - b;
+            while (d >  Math.PI) d -= 2 * Math.PI;
+            while (d < -Math.PI) d += 2 * Math.PI;
+            return d;
+        }
+
+        const diffA = normDiff(forceDir, beamDirA);
+        const diffB = normDiff(forceDir, beamDirB);
+
+        // Choose the beam direction that gives the smaller arc (acute angle)
+        const usedBeamDir = Math.abs(diffA) <= Math.abs(diffB) ? beamDirA : beamDirB;
+        const diff = Math.abs(diffA) <= Math.abs(diffB) ? diffA : diffB;
+
+        // Draw dashed reference line along the chosen beam direction
+        ctx.strokeStyle = color;
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 0.55;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(arcRadius * 1.7 * Math.cos(usedBeamDir), arcRadius * 1.7 * Math.sin(usedBeamDir));
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1.0;
+
+        // Arc from chosen beam direction to force direction
+        const counterclockwise = diff < 0;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, arcRadius, usedBeamDir, forceDir, counterclockwise);
+        ctx.stroke();
+
+        // Label at midpoint of arc
+        const midDir = usedBeamDir + diff / 2;
+        const labelR = arcRadius + 16;
+        const lx = labelR * Math.cos(midDir);
+        const ly = labelR * Math.sin(midDir);
+
+        ctx.font = 'bold 13px Nunito, sans-serif';
+        const tw = ctx.measureText(label).width;
+        ctx.fillStyle = 'rgba(255,255,255,0.88)';
+        ctx.fillRect(lx - tw/2 - 3, ly - 9, tw + 6, 18);
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, lx, ly);
+
+        ctx.restore();
+    }
+
+    // ==================== FORCE TABLE ====================
+    function buildForceTable(q, isGCSE) {
+        const tbody = document.getElementById('forceTableBody');
+        tbody.innerHTML = '';
+
+        q.forces.forEach((f, idx) => {
+            const isMissing = idx === q.missingIndex;
+            const color = forceColors[idx % forceColors.length];
+            const label = String.fromCharCode(65 + idx);
+
+            const angleToBeam = getAngleToBeam(f.angleFromVertical, q.beamAngle);
+
+            const distVal  = (isMissing && q.questionType === 'distance') ? null : f.distance;
+            const angleVal = (isMissing && q.questionType === 'angle')    ? null : angleToBeam;
+            const magVal   = (isMissing && q.questionType === 'force')    ? null : f.magnitude;
+
+            const fmt = (v, decimals=2) => v === null
+                ? `<span class="missing-val">?</span>`
+                : `<span class="known-val">${typeof v === 'number' ? v.toFixed(decimals) : v}</span>`;
+
+            const tr = document.createElement('tr');
+            tr.dataset.forceIdx = idx;
+            tr.innerHTML = `
+                <td>
+                  <div class="force-label-cell">
+                    <span class="force-color-dot" style="background:${color}"></span>
+                    <strong style="color:${color}">${label}</strong>
+                  </div>
+                </td>
+                <td>${fmt(distVal, 2)}</td>
+                <td>${fmt(angleVal, 1)}</td>
+                <td>${fmt(magVal, 1)}</td>
+            `;
+            tbody.appendChild(tr);
         });
+    }
+
+    // ==================== HOVER DETECTION ====================
+    const canvas = document.getElementById('gameCanvas');
+
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mx = (e.clientX - rect.left) * scaleX;
+        const my = (e.clientY - rect.top) * scaleY;
+
+        let hoveredIdx = -1;
+        let minDist = 45; // pixels threshold
+
+        forceHitAreas.forEach(ha => {
+            const d = Math.hypot(mx - ha.x, my - ha.y);
+            if (d < minDist) { minDist = d; hoveredIdx = ha.idx; }
+        });
+
+        document.querySelectorAll('#forceTableBody tr').forEach(row => {
+            row.classList.toggle('highlighted', parseInt(row.dataset.forceIdx) === hoveredIdx);
+        });
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+        document.querySelectorAll('#forceTableBody tr').forEach(row => row.classList.remove('highlighted'));
+    });
+
+    // ==================== ANSWER CHECKING ====================
+    function roundToSigFigs(num, sigFigs) {
+        if (num === 0) return 0;
+        const mag = Math.floor(Math.log10(Math.abs(num)));
+        const factor = Math.pow(10, sigFigs - mag - 1);
+        return Math.round(num * factor) / factor;
+    }
+
+    function countSigFigs(numStr) {
+        const cleaned = numStr.replace(/^0+/, '').replace('.', '');
+        return cleaned.replace(/^0+/, '').length;
+    }
+
+    function checkAnswer() {
+        playSound('click');
+        const userAnswer = parseFloat(document.getElementById('answerInput').value);
+        const userUnit   = document.getElementById('unitSelect').value;
+        const { answer: correctAnswer, unit: correctUnit } = gameState.currentQuestion;
+        const feedbackDiv = document.getElementById('feedback');
+
+        if (isNaN(userAnswer)) {
+            feedbackDiv.innerHTML = '<div class="feedback incorrect">Please enter a number!</div>';
+            return;
+        }
+        if (!userUnit) {
+            feedbackDiv.innerHTML = '<div class="feedback incorrect">Please select a unit!</div>';
+            return;
+        }
+
+        const sigFigs = countSigFigs(document.getElementById('answerInput').value.trim());
+        if (sigFigs < 2) {
+            gameState.attemptsRemaining--;
+            updateAttemptsDisplay();
+            feedbackDiv.innerHTML = '<div class="feedback incorrect">❌ Give your answer to at least 2 significant figures!</div>';
+            if (gameState.attemptsRemaining === 0) handleIncorrect(true);
+            return;
+        }
+
+        gameState.previousAnswers.push({ answer: userAnswer, unit: userUnit });
+
+        if (userUnit !== correctUnit) {
+            gameState.attemptsRemaining--;
+            updateAttemptsDisplay();
+            feedbackDiv.innerHTML = `<div class="feedback incorrect">❌ Wrong unit! You need ${correctUnit}.</div>`;
+            playSound('incorrect');
+            if (gameState.attemptsRemaining === 0) handleIncorrect(true);
+            return;
+        }
+
+        const userR    = roundToSigFigs(userAnswer, 2);
+        const correctR = roundToSigFigs(correctAnswer, 2);
+
+        if (Math.abs(userR - correctR) / Math.max(Math.abs(correctR), 0.01) < 0.02) {
+            handleCorrect();
+        } else {
+            gameState.attemptsRemaining--;
+            updateAttemptsDisplay();
+            feedbackDiv.innerHTML = `<div class="feedback incorrect">❌ ${generateHint(userAnswer, correctAnswer)}</div>`;
+            playSound('incorrect');
+            if (gameState.attemptsRemaining === 0) handleIncorrect(true);
+        }
+    }
+
+    function updateAttemptsDisplay() {
+        const el = document.getElementById('attemptsText');
+        el.textContent = `Attempts remaining: ${gameState.attemptsRemaining}`;
+        if (gameState.attemptsRemaining <= 1) el.classList.add('low');
+    }
+
+    function generateHint(userAnswer, correctAnswer) {
+        const ratio = userAnswer / correctAnswer;
+        if (ratio > 0.9 && ratio < 1.1) return "Very close! Check rounding carefully.";
+        if (Math.abs(ratio - 2) < 0.15) return "Your answer is about twice too large — did you forget a division?";
+        if (Math.abs(ratio - 0.5) < 0.1) return "Your answer is about half — did you divide instead of multiply?";
+        if (gameState.currentQuestion.questionType === 'angle')
+            return "Check your trig: use sin(θ) for the perpendicular component.";
+        if (userAnswer > correctAnswer * 1.5) return "Too high — double-check your calculation.";
+        if (userAnswer < correctAnswer * 0.5) return "Too low — make sure you're using all the forces.";
+        return "Not quite. Remember: sum of clockwise moments = sum of anticlockwise moments.";
+    }
+
+    function handleCorrect() {
+        playSound('correct');
+        const isFirstAttempt = gameState.attemptsRemaining === 3;
+        const numForces = gameState.currentQuestion.numForces;
+        const basePoints = isFirstAttempt ? 100 : (gameState.attemptsRemaining === 2 ? 60 : 30);
+        const points = basePoints + (numForces - 2) * 20;
+        gameState.score += points;
+        document.getElementById('score').textContent = gameState.score;
+        gameState.questionsAnswered++;
+        gameState.correctAnswers++;
+        if (isFirstAttempt) {
+            gameState.firstTimeCorrect++;
+            gameState.accuracyScore = Math.min(100, gameState.accuracyScore + 10);
+            if (gameState.preferredForceCount < 5) gameState.preferredForceCount++;
+        } else {
+            gameState.accuracyScore = Math.max(-100, gameState.accuracyScore - 5);
+        }
+        const messages = ['Excellent!','Perfect!','Brilliant!','Outstanding!','Superb!'];
+        document.getElementById('feedback').innerHTML =
+            `<div class="feedback correct">✅ ${messages[Math.floor(Math.random()*messages.length)]} +${points} points!</div>`;
+        drawAccuracyGauge();
+        setTimeout(() => generateQuestion(), 2000);
+    }
+
+    function handleIncorrect(showAnswer = false) {
+        gameState.questionsAnswered++;
+        gameState.accuracyScore = Math.max(-100, gameState.accuracyScore - 15);
+        if (showAnswer) {
+            const { answer, unit } = gameState.currentQuestion;
+            document.getElementById('feedback').innerHTML =
+                `<div class="feedback incorrect">❌ Out of attempts! Answer: ${answer.toFixed(2)} ${unit}</div>`;
+            drawAccuracyGauge();
+            setTimeout(() => generateQuestion(), 3000);
+        }
+    }
+
+    // ==================== ACCURACY GAUGE ====================
+    function drawAccuracyGauge() {
+        const canvas = document.getElementById('gaugeCanvas');
+        const ctx = canvas.getContext('2d');
+        const cx = canvas.width / 2, cy = canvas.height - 10, r = 78;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const sections = [
+            { start: Math.PI,               end: Math.PI + Math.PI/3,     color: '#E71D36' },
+            { start: Math.PI + Math.PI/3,   end: Math.PI + 2*Math.PI/3,   color: '#F7B801' },
+            { start: Math.PI + 2*Math.PI/3, end: 2*Math.PI,               color: '#2EC4B6' }
+        ];
+        ctx.lineWidth = 14;
+        sections.forEach(s => {
+            ctx.strokeStyle = s.color;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, s.start, s.end, false);
+            ctx.stroke();
+        });
+
+        const normalised = (gameState.accuracyScore + 100) / 200;
+        const needleAngle = Math.PI + normalised * Math.PI;
+        ctx.strokeStyle = '#1A1A2E';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + (r - 10) * Math.cos(needleAngle), cy + (r - 10) * Math.sin(needleAngle));
+        ctx.stroke();
+        ctx.fillStyle = '#1A1A2E';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 7, 0, 2*Math.PI);
+        ctx.fill();
+    }
+
+    // ==================== KEYBOARD SUPPORT ====================
+    document.getElementById('answerInput').addEventListener('keypress', e => {
+        if (e.key === 'Enter') checkAnswer();
+    });
+
+    window.addEventListener('load', () => drawAccuracyGauge());
     </script>
 </body>
 </html>
