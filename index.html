@@ -196,9 +196,9 @@
                             <thead>
                                 <tr>
                                     <th>Force</th>
-                                    <th>Distance/m</th>
-                                    <th>Angle/°</th>
-                                    <th>Magnitude/N</th>
+                                    <th>Dist (m)</th>
+                                    <th>Angle (°)</th>
+                                    <th>Mag (N)</th>
                                 </tr>
                             </thead>
                             <tbody id="forceTableBody"></tbody>
@@ -698,7 +698,7 @@
             // Draw angle arc (for A-level, or if GCSE and showing the concept visually)
             if (!isGCSE) {
                 const angleToBeam = getAngleToBeam(force.angleFromVertical, q.beamAngle);
-                // const arcLabel = (isMissing && q.questionType === 'angle') ? '?' : angleToBeam.toFixed(1) + '°';
+                const arcLabel = (isMissing && q.questionType === 'angle') ? '?' : angleToBeam.toFixed(1) + '°';
                 drawAngleArc(ctx, fx, fy, bRad, faRad, force.side, arcLabel, color);
             }
         });
