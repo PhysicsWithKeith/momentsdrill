@@ -195,10 +195,10 @@
                         <table class="force-table" id="forceTable">
                             <thead>
                                 <tr>
-                                    <th>Force</th>
-                                    <th>Dist (m)</th>
-                                    <th>Angle (°)</th>
-                                    <th>Mag (N)</th>
+                                    <th>Arrow</th>
+                                    <th>Dist/m</th>
+                                    <th>Angle/°</th>
+                                    <th>Force/N</th>
                                 </tr>
                             </thead>
                             <tbody id="forceTableBody"></tbody>
@@ -678,17 +678,17 @@
             // Label at MIDPOINT of arrow shaft, offset to the right (perpendicular)
             // Perpendicular direction in local frame: (1, 0) when un-rotated → to the right
             // In world coords, un-rotate and draw
-            ctx.translate(0, -arrowLen / 2);
+            ctx.translate(0, -arrowLen * 1.2);
             ctx.rotate(faRad); // un-rotate to keep text readable
             ctx.fillStyle = color;
             ctx.font = 'bold 16px Nunito, sans-serif';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             // Determine which side to put label based on arrow direction to avoid beam overlap
-            const labelOffset = 13;
+            const labelOffset = 0; // 13;
             // Background pill
             const labelW = ctx.measureText(label).width + 10;
-            ctx.fillStyle = 'rgba(255,255,255,0.85)';
+            ctx.fillStyle = 'rgba(255,255,255,0.0)';
             ctx.fillRect(labelOffset - 2, -10, labelW, 20);
             ctx.fillStyle = color;
             ctx.fillText(label, labelOffset + 3, 0);
@@ -698,7 +698,7 @@
             // Draw angle arc (for A-level, or if GCSE and showing the concept visually)
             if (!isGCSE) {
                 const angleToBeam = getAngleToBeam(force.angleFromVertical, q.beamAngle);
-                const arcLabel = (isMissing && q.questionType === 'angle') ? '?' : angleToBeam.toFixed(1) + '°';
+                const arcLabel = (isMissing && q.questionType === 'angle') ? '' : '' // angleToBeam.toFixed(1) + '°';
                 drawAngleArc(ctx, fx, fy, bRad, faRad, force.side, arcLabel, color);
             }
         });
@@ -772,12 +772,12 @@
 
         ctx.font = 'bold 13px Nunito, sans-serif';
         const tw = ctx.measureText(label).width;
-        ctx.fillStyle = 'rgba(255,255,255,0.88)';
-        ctx.fillRect(lx - tw/2 - 3, ly - 9, tw + 6, 18);
-        ctx.fillStyle = color;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(label, lx, ly);
+        // ctx.fillStyle = 'rgba(255,255,255,0.88)';
+        // ctx.fillRect(lx - tw/2 - 3, ly - 9, tw + 6, 18);
+        // ctx.fillStyle = color;
+        // ctx.textAlign = 'center';
+        // ctx.textBaseline = 'middle';
+        // ctx.fillText(label, lx, ly);
 
         ctx.restore();
     }
